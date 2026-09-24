@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Hotel.Application/CenterFlow.Application.csproj" />
+  <Project Path="Hotel.Domain/CenterFlow.Domain.csproj" />
+  <Project Path="Hotel.Infrastructure/CenterFlow.Infrastructure.csproj" />
+  <Project Path="Hotel/CenterFlow.csproj" />
+</Solution>
