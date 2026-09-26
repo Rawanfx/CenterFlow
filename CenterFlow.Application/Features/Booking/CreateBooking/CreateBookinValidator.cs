@@ -7,8 +7,8 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
     {
         public CreateBookinValidator()
         {
-            RuleFor(x => x.date.Date)
-                .GreaterThanOrEqualTo(DateTime.UtcNow.Date);
+            RuleFor(x => x.date)
+      .GreaterThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow));
             RuleFor(x => x)
                 .Must(ValidPeriod);
         }
