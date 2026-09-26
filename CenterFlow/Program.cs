@@ -2,6 +2,9 @@ using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Infrastructure.Data;
 using CenterFlow.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +16,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<IAppDbContext>(x => x.GetRequiredService<AppDbContext>());
 builder.Services.AddDbContext<AppDbContext>(x => x.UseSqlServer(builder.Configuration["cs"]));
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<RedLockFactory>(x =>
+{
+    var cs = builder.Configuration["Redis"];
+    var endpoint = new List<RedLockEndPoint>()
+    { new DnsEndPoint(cs.Split(':')[0], int.Parse(cs.Split(':')[1])) };
+    return RedLockFactory.Create(endpoint);
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

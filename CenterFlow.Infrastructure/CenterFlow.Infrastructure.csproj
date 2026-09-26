@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Hotel.Application\CenterFlow.Application.csproj" />
-    <ProjectReference Include="..\Hotel.Domain\CenterFlow.Domain.csproj" />
+    <ProjectReference Include="..\CenterFlow.Application\CenterFlow.Application.csproj" />
+    <ProjectReference Include="..\CenterFlow.Domain\CenterFlow.Domain.csproj" />
   </ItemGroup>
 
 </Project>

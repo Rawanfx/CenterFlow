@@ -20,11 +20,13 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+
+		<PackageReference Include="RedLock.net" Version="2.3.2" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Hotel.Application\CenterFlow.Application.csproj" />
-		<ProjectReference Include="..\Hotel.Infrastructure\CenterFlow.Infrastructure.csproj" />
+		<ProjectReference Include="..\CenterFlow.Application\CenterFlow.Application.csproj" />
+		<ProjectReference Include="..\CenterFlow.Infrastructure\CenterFlow.Infrastructure.csproj" />
 	</ItemGroup>
 
 </Project>

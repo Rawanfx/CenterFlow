@@ -5,6 +5,7 @@ using CenterFlow.Application.Common.Models;
 using CenterFlow.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using RedLockNet.SERedis;
 
 namespace CenterFlow.Application.Features.Booking.CreateBooking
 {
@@ -13,10 +14,14 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
     {
         private readonly IAppDbContext context;
         private readonly ICurrentUserService userService;
-        public CreateBookingCommandHandler(IAppDbContext context,ICurrentUserService userService)
+        private readonly RedLockFactory redLockFactory;
+        public CreateBookingCommandHandler(IAppDbContext context
+            ,ICurrentUserService userService
+            , RedLockFactory redLockFactory)
         {
             this.context = context;
             this.userService = userService;
+            this.redLockFactory = redLockFactory;
         }
         public async Task<Response<Guid>> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
         {
@@ -25,6 +30,17 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
             var roomId = await context.Rooms.FirstOrDefaultAsync(x => x.Id == request.RoomId);
             if (teacher == null || roomId==null)
                 throw new NotFoundException("data Not found");
+
+            var key = $"booking-lock:room:{request.RoomId}:{request.date:yyyyMMdd}:{teacher.Id} ";
+            var expiry = TimeSpan.FromSeconds(10);
+            await using var redLock = await redLockFactory.CreateLockAsync(
+                resource:key,
+                expiryTime:TimeSpan.FromSeconds(10),
+                waitTime:TimeSpan.FromSeconds (2),
+                retryTime:TimeSpan.FromMilliseconds(200)
+                );
+            if (!redLock.IsAcquired)
+                throw new InvalidBooking("Someone else is booking this room right now, please try again.");
 
             var isWithinAvailability = await context.TeacherAvailabilities
           .AnyAsync(a => a.TeacherId ==Guid.Parse( teacher.Id) 
@@ -43,12 +59,14 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
                && x.From < request.To
                 && x.To > request.From
                 && x.RoomId == request.RoomId);
+
             var isConflict = await context.Books
     .AnyAsync(x => x.Status != Domain.Enum.BookingStatus.Cancelled
                 && x.Date == request.date
                 && (x.RoomId == request.RoomId || teacher.Id == teacher.Id)
                 && x.From < request.To
                 && x.To > request.From);
+
             if (booking)
                 throw new InvalidBooking("This room has been booked");
             if (isConflict)

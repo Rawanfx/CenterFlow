@@ -18,8 +18,7 @@ namespace CenterFlow.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.Entity<StudentBooking>()
-                .HasKey(x => new { x.BookId, x.StudentId });
+        
         }
     }
 }
