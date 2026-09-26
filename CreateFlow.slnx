@@ -1,5 +1,7 @@
 <Solution>
-  <Folder Name="/Solution Items/" />
+  <Folder Name="/Solution Items/">
+    <File Path="docker-compose.yaml" />
+  </Folder>
   <Project Path="../source/repos/CreateFlow/CenterFlow.Application/CenterFlow.Application.csproj" />
   <Project Path="../source/repos/CreateFlow/CenterFlow.Domain/CenterFlow.Domain.csproj" />
   <Project Path="../source/repos/CreateFlow/CenterFlow.Infrastructure/CenterFlow.Infrastructure.csproj" />
