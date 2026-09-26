@@ -1,6 +1,7 @@
 <Solution>
-  <Project Path="Hotel.Application/CenterFlow.Application.csproj" />
-  <Project Path="Hotel.Domain/CenterFlow.Domain.csproj" />
-  <Project Path="Hotel.Infrastructure/CenterFlow.Infrastructure.csproj" />
-  <Project Path="Hotel/CenterFlow.csproj" />
+  <Folder Name="/Solution Items/" />
+  <Project Path="../source/repos/CreateFlow/CenterFlow.Application/CenterFlow.Application.csproj" />
+  <Project Path="../source/repos/CreateFlow/CenterFlow.Domain/CenterFlow.Domain.csproj" />
+  <Project Path="../source/repos/CreateFlow/CenterFlow.Infrastructure/CenterFlow.Infrastructure.csproj" />
+  <Project Path="../source/repos/CreateFlow/CenterFlow/CenterFlow.csproj" />
 </Solution>
