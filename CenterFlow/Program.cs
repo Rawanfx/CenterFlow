@@ -1,7 +1,9 @@
+using CenterFlow;
 using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Infrastructure.Data;
 using CenterFlow.Infrastructure.Services;
 using CenterFlow.Infrastructure.Settings;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using RedLockNet.SERedis;
 using RedLockNet.SERedis.Configuration;
@@ -20,6 +22,8 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<ICancelEnrollment,CancelEnrollment>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddHangfire(x => x.UseSqlServerStorage(builder.Configuration["hangfire"]));
+builder.Services.AddHangfireServer();
 builder.Services.Configure<EmailSetting>(builder.Configuration.GetSection("EmailSetting"));
 builder.Services.AddScoped<RedLockFactory>(x =>
 {
@@ -35,11 +39,18 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+app.UseMiddleware<GlobalExceptionHandling>();
 
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseHangfireDashboard("/hangfire");
 app.MapControllers();
+RecurringJob.AddOrUpdate<IMarkCompletedSessionsJob>(
+    "mark-completed-sessions",
+    x=>x.Execute(),
+    Cron.Daily
+    );
 
 app.Run();
