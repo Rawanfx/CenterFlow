@@ -1,9 +1,11 @@
 using CenterFlow;
 using CenterFlow.Application.Common.Interfaces;
+using CenterFlow.Domain.Entities;
 using CenterFlow.Infrastructure.Data;
 using CenterFlow.Infrastructure.Services;
 using CenterFlow.Infrastructure.Settings;
 using Hangfire;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RedLockNet.SERedis;
 using RedLockNet.SERedis.Configuration;
@@ -25,6 +27,11 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHangfire(x => x.UseSqlServerStorage(builder.Configuration["hangfire"]));
 builder.Services.AddHangfireServer();
 builder.Services.Configure<EmailSetting>(builder.Configuration.GetSection("EmailSetting"));
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+builder.Services.AddScoped<IdentitySeeder>();
+builder.Services.AddTransient<GlobalExceptionHandling>();
 builder.Services.AddScoped<RedLockFactory>(x =>
 {
     var cs = builder.Configuration["Redis"];
@@ -33,6 +40,11 @@ builder.Services.AddScoped<RedLockFactory>(x =>
     return RedLockFactory.Create(endpoint);
 });
 var app = builder.Build();
+
+ using (var scope=  app.Services.CreateAsyncScope())
+{
+    await scope.ServiceProvider.GetRequiredService<IdentitySeeder>().SeedRole();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
