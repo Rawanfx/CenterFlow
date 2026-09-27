@@ -19,6 +19,7 @@ namespace CenterFlow.Application.Features.Availability.GetAvailableSlots
                  && x.Status != Domain.Enum.BookingStatus.Cancelled
                  && x.Date == request.date
                  && x.StudentBookings.Count(u => !u.IsCancelled) + 1 <= x.Room.Capacity)
+                 .AsNoTracking()
                  .Select(y=> new GetAvailableSessionsDto()
                  {
                      AvaliableSeats = y.Room.Capacity-y.StudentBookings.Count(u => !u.IsCancelled),
