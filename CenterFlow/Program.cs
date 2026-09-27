@@ -1,6 +1,7 @@
 using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Infrastructure.Data;
 using CenterFlow.Infrastructure.Services;
+using CenterFlow.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using RedLockNet.SERedis;
 using RedLockNet.SERedis.Configuration;
@@ -16,7 +17,10 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<IAppDbContext>(x => x.GetRequiredService<AppDbContext>());
 builder.Services.AddDbContext<AppDbContext>(x => x.UseSqlServer(builder.Configuration["cs"]));
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ICancelEnrollment,CancelEnrollment>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.Configure<EmailSetting>(builder.Configuration.GetSection("EmailSetting"));
 builder.Services.AddScoped<RedLockFactory>(x =>
 {
     var cs = builder.Configuration["Redis"];

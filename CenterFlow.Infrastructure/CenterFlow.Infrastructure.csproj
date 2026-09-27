@@ -18,6 +18,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="MimeKit" Version="4.18.1" />
+    <PackageReference Include="SendEmail.MailKit" Version="2.0.1" />
   </ItemGroup>
 
   <ItemGroup>
