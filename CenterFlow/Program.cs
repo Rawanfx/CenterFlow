@@ -32,6 +32,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddDefaultTokenProviders();
 builder.Services.AddScoped<IdentitySeeder>();
 builder.Services.AddTransient<GlobalExceptionHandling>();
+builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("JWT"));
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<RedLockFactory>(x =>
 {
