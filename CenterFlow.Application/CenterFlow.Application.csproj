@@ -19,4 +19,8 @@
     <ProjectReference Include="..\CenterFlow.Domain\CenterFlow.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Auth\Common\" />
+  </ItemGroup>
+
 </Project>
