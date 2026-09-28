@@ -17,7 +17,6 @@ namespace CenterFlow.Application.Features.Auth.TeacherRegister
             )
         {
             this.context = context;
-            
             this.userManager = userManager;
         }
         public async Task<Response<string>> Handle(TeacherRegisterCommand request, CancellationToken cancellationToken)
@@ -45,7 +44,7 @@ namespace CenterFlow.Application.Features.Auth.TeacherRegister
             if (!roleResult.Succeeded)
             {
                 await userManager.DeleteAsync(teacher);
-                throw new IdentityException(result.Errors.Select(x => x.Description).ToList());
+                throw new IdentityException(roleResult.Errors.Select(x => x.Description).ToList());
             }
             return new Response<string>() { Success = true, Message = "Registed Successfully" };
         }

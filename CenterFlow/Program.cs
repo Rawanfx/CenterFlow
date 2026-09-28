@@ -5,11 +5,14 @@ using CenterFlow.Infrastructure.Data;
 using CenterFlow.Infrastructure.Services;
 using CenterFlow.Infrastructure.Settings;
 using Hangfire;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using RedLockNet.SERedis;
 using RedLockNet.SERedis.Configuration;
 using System.Net;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +37,26 @@ builder.Services.AddScoped<IdentitySeeder>();
 builder.Services.AddTransient<GlobalExceptionHandling>();
 builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("JWT"));
 builder.Services.AddScoped<IJwtService, JwtService>();
+var jwt = builder.Configuration.GetSection("JWT").Get<JwtSetting>()!;
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = jwt.Issuer,
+        ValidateAudience = true,
+        ValidAudience = jwt.Audience,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key))
+    };
+});
 builder.Services.AddScoped<RedLockFactory>(x =>
 {
     var cs = builder.Configuration["Redis"];
@@ -57,6 +80,7 @@ app.UseMiddleware<GlobalExceptionHandling>();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();   
 app.UseAuthorization();
 
 app.UseHangfireDashboard("/hangfire");

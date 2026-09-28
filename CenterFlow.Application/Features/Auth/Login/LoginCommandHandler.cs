@@ -20,10 +20,10 @@ namespace CenterFlow.Application.Features.Auth.Login
         public async Task<Response<LoginResult>> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
             var user = await userManager.FindByEmailAsync(request.Email);
-            if (user == null || await userManager.CheckPasswordAsync(user, request.Password))
+            if (user == null || !await userManager.CheckPasswordAsync(user, request.Password))
                 throw new IdentityException(new List<string>{ "Error in email or password" });
             string token = await jwtService.GenerateJwtTonen(user);
-            // string refreshToken = 
+            string refreshToken = jwtService.GenerateRefreshToken();
             return new Response<LoginResult>()
             {
                 Data = new LoginResult()
