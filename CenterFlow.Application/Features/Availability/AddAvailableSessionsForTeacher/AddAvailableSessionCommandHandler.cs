@@ -19,18 +19,18 @@ namespace CenterFlow.Application.Features.Availability.AddAvailableSessionsForTe
         }
         public async Task<Response<Guid>> Handle(AddAvailableSessionCommand request, CancellationToken cancellationToken)
         {
-            var teacher = await context.Teachers.FirstOrDefaultAsync(x => x.Id == userService.UserId);
+            var teacher = await context.Teachers.FirstOrDefaultAsync(x => x.Id == userService.UserId,cancellationToken);
             if (teacher == null)
-                throw new NotFoundException("User not found");
+                throw new ForbiddenException("Only teachers can manage availability.");
 
             var available = await context.TeacherAvailabilities
                 .AnyAsync(x => x.TeacherId == Guid.Parse(teacher.Id)
                 && x.DayOfWeek == request.Day
-                && x.From <= request.From
-                && x.To >= request.To);
+               && x.From < request.To &&
+                x.To > request.From,cancellationToken);
 
             if (available)
-                throw new InvalidBooking("");
+                throw new ConflictException("This availability overlaps with an existing one.");
 
             var teacherAvailabe = new TeacherAvailability()
             {
@@ -41,13 +41,13 @@ namespace CenterFlow.Application.Features.Availability.AddAvailableSessionsForTe
                 Id = Guid.NewGuid()
                 
             };
-            await context.TeacherAvailabilities.AddAsync(teacherAvailabe);
-            await context.SaveChangesAsync();
+            await context.TeacherAvailabilities.AddAsync(teacherAvailabe,cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
             return new Response<Guid>()
             {
                 Data = teacherAvailabe.Id,
                 Success = true,
-                Message =""
+                Message = "Availability added successfully."
             };
         }
     }
