@@ -1,4 +1,5 @@
 ﻿using CenterFlow.Application.Common.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -14,5 +15,11 @@ public class TestController : ControllerBase
            
           
         return Ok("Sent");
+    }
+    [HttpGet]
+    [Authorize(Roles ="Teacher")]
+    public IActionResult Test()
+    {
+        return Ok();
     }
 }

@@ -31,7 +31,7 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
             if (teacher == null || roomId==null)
                 throw new NotFoundException("data Not found");
 
-            var key = $"booking-lock:room:{request.RoomId}:{request.date:yyyyMMdd}:{teacher.Id} ";
+            var key = $"booking-lock:room:{request.RoomId}:{request.date:yyyyMMdd}:{teacher.Id}";
             var expiry = TimeSpan.FromSeconds(10);
             await using var redLock = await redLockFactory.CreateLockAsync(
                 resource:key,
@@ -63,7 +63,7 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
             var isConflict = await context.Books
     .AnyAsync(x => x.Status != Domain.Enum.BookingStatus.Cancelled
                 && x.Date == request.date
-                && (x.RoomId == request.RoomId || teacher.Id == teacher.Id)
+                && (x.RoomId == request.RoomId || x.Teacher.Id == teacher.Id)
                 && x.From < request.To
                 && x.To > request.From);
 

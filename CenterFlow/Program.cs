@@ -1,4 +1,5 @@
 using CenterFlow;
+using CenterFlow.Application;
 using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Domain.Entities;
 using CenterFlow.Infrastructure.Data;
@@ -57,6 +58,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key))
     };
 });
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(IMarker).Assembly));
 builder.Services.AddScoped<RedLockFactory>(x =>
 {
     var cs = builder.Configuration["Redis"];

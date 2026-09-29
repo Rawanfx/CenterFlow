@@ -9,7 +9,6 @@ namespace CenterFlow.Infrastructure.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         public DbSet<Teacher> Teachers => Set<Teacher>();
         public DbSet<Book> Books => Set<Book>();
-        public DbSet<Center> Centers => Set<Center>();
         public DbSet<Room> Rooms => Set<Room>();
         public DbSet<Student> Students => Set<Student>();
         public DbSet<StudentBooking> StudentBookings => Set<StudentBooking>();
