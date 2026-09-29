@@ -8,5 +8,6 @@
         public TimeSpan To { get; set; }
         public Teacher Teacher { get; set; }
         public Guid TeacherId { get; set; }
+        public bool IsDelete { get; set; } = false;
     }
 }

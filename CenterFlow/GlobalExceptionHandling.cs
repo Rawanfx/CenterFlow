@@ -34,35 +34,35 @@ namespace CenterFlow
                await context.Response.WriteAsJsonAsync(response);
             }
         }
-        private async Task HandleException(HttpContext context, Exception ex)
-        {
-            var (response, statusCode) = ex switch
-            {
-                IdentityException exception => (
-                    new Response<object> { Success = false, Errors = exception.Errors },
-                    StatusCodes.Status400BadRequest
-                ),
+        //private async Task HandleException(HttpContext context, Exception ex)
+        //{
+        //    var (response, statusCode) = ex switch
+        //    {
+        //        IdentityException exception => (
+        //            new Response<object> { Success = false, Errors = exception.Errors },
+        //            StatusCodes.Status400BadRequest
+        //        ),
 
-                NotFoundException exception => (
-                    new Response<object> { Success = false, Message = exception.Message },
-                    StatusCodes.Status404NotFound
-                ),
+        //        NotFoundException exception => (
+        //            new Response<object> { Success = false, Message = exception.Message },
+        //            StatusCodes.Status404NotFound
+        //        ),
 
-                ConflictException exception=> (new Response<object>
-                {
-                    Success = false,
-                    Message = exception.Message
-                },StatusCodes.Status400BadRequest ),
+        //        ConflictException exception=> (new Response<object>
+        //        {
+        //            Success = false,
+        //            Message = exception.Message
+        //        },StatusCodes.Status400BadRequest ),
 
-                _ => (
-                    new Response<object> { Success = false, Message = "An error occurred" },
-                    StatusCodes.Status500InternalServerError
-                )
-            };
+        //        _ => (
+        //            new Response<object> { Success = false, Message = "An error occurred" },
+        //            StatusCodes.Status500InternalServerError
+        //        )
+        //    };
 
-            context.Response.StatusCode = statusCode;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsJsonAsync(response);
-        }
+        //    context.Response.StatusCode = statusCode;
+        //    context.Response.ContentType = "application/json";
+        //    await context.Response.WriteAsJsonAsync(response);
+        //}
     }
 }

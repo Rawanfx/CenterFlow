@@ -27,6 +27,7 @@ namespace CenterFlow.Application.Features.Availability.AddAvailableSessionsForTe
                 .AnyAsync(x => x.TeacherId == Guid.Parse(teacher.Id)
                 && x.DayOfWeek == request.Day
                && x.From < request.To &&
+                !x.IsDelete&&
                 x.To > request.From,cancellationToken);
 
             if (available)

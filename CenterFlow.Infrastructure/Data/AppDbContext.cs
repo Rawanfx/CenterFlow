@@ -17,7 +17,8 @@ namespace CenterFlow.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-        
+            builder.Entity<TeacherAvailability>()
+                .HasQueryFilter(x => !x.IsDelete);
         }
     }
 }

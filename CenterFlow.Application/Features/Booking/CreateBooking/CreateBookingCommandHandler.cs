@@ -40,16 +40,16 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
                 retryTime:TimeSpan.FromMilliseconds(200)
                 );
             if (!redLock.IsAcquired)
-                throw new InvalidBooking("Someone else is booking this room right now, please try again.");
+                throw new ConflictException("Someone else is booking this room right now, please try again.");
 
             var isWithinAvailability = await context.TeacherAvailabilities
           .AnyAsync(a => a.TeacherId ==Guid.Parse( teacher.Id) 
           && a.DayOfWeek == request.date.DayOfWeek
                 && a.From <= request.From
-                && a.To >= request.To);
+                && a.To >= request.To && !a.IsDelete);
 
             if (!isWithinAvailability)
-                throw new InvalidBooking("This time is outside your declared availability.");
+                throw new ConflictException("This time is outside your declared availability.");
 
             var booking = await context.Books
                 .AnyAsync(x => x.Status != Domain.Enum.BookingStatus.Cancelled
@@ -68,9 +68,9 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
                 && x.To > request.From);
 
             if (booking)
-                throw new InvalidBooking("This room has been booked");
+                throw new ConflictException("This room has been booked");
             if (isConflict)
-                throw new InvalidBooking("You already have a booking during this time.");
+                throw new ConflictException("You already have a booking during this time.");
             var book = new Book()
             {
                 Date = request.date,
