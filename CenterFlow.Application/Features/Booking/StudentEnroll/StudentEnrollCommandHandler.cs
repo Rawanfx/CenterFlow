@@ -30,9 +30,9 @@ namespace CenterFlow.Application.Features.Booking.StudentEnroll
                 .Include(x=>x.Room)
                 .FirstOrDefaultAsync(x => x.Id == request.BookId);
             if (student == null || book == null)
-                throw new InvalidBooking("Data not found");
+                throw new ConflictException("Data not found");
             if (book.Status == Domain.Enum.BookingStatus.Cancelled)
-                throw new InvalidBooking("this book isn't available");
+                throw new ConflictException("this book isn't available");
             var lockKey = $"enrollment-lock:booking:{request.BookId}";
             await using var redLock = await redLockFactory.CreateLockAsync(
     resource: lockKey,
@@ -44,16 +44,16 @@ namespace CenterFlow.Application.Features.Booking.StudentEnroll
     && x.BookId == request.BookId
     && !x.IsCancelled);
             if (alreadyEnrolled)
-                throw new InvalidBooking("You are already enrolled in this session.");
+                throw new ConflictException("You are already enrolled in this session.");
 
 
             if (!redLock.IsAcquired)
-                throw new InvalidBooking("Please try again in a moment.");
+                throw new ConflictException("Please try again in a moment.");
             var studentCount = await context.StudentBookings
                 .Where(x => x.BookId == request.BookId && !x.IsCancelled)
                 .CountAsync();
             if (studentCount + 1 > book.Room.Capacity)
-                throw new InvalidBooking("This session is fully booked.");
+                throw new ConflictException("This session is fully booked.");
             var studentBook = new StudentBooking()
             {
                 BookId = request.BookId,

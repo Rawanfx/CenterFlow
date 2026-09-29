@@ -5,12 +5,10 @@ using System.Text;
 
 namespace CenterFlow.Application.Common.Exceptions
 {
-    public class NotFoundException:Exception
+    public class NotFoundException:AppException
     {
-        public string Message { get; }
-        public NotFoundException (string message):base(message)
+        public NotFoundException (string message):base(message,404)
         {
-            this.Message = message;
         }
     }
 }

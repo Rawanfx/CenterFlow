@@ -12,10 +12,26 @@ namespace CenterFlow
             {
                 await next(context);
             }
+            catch (AppException ex)
+            {
+                context.Response.StatusCode = ex.StatusCode;
+                var response = new Response<string>()
+                {
+                    Success =false,
+                    Errors = ex.Message
+                };
+                context.Response.ContentType= "application/json";
+                await context.Response.WriteAsJsonAsync(response);
+            }
             catch (Exception ex)
             {
-                //  Log.Error($"Exception Thrown {ex.Message} ");
-                await HandleException(context, ex);
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                var response = new Response<string>()
+                {
+                    Success = false,
+                    Message = "An Error Occured"
+                };
+               await context.Response.WriteAsJsonAsync(response);
             }
         }
         private async Task HandleException(HttpContext context, Exception ex)
@@ -32,7 +48,7 @@ namespace CenterFlow
                     StatusCodes.Status404NotFound
                 ),
 
-                InvalidBooking exception=> (new Response<object>
+                ConflictException exception=> (new Response<object>
                 {
                     Success = false,
                     Message = exception.Message
