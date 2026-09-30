@@ -3,6 +3,7 @@ using CenterFlow.Application;
 using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Domain.Entities;
 using CenterFlow.Infrastructure.Data;
+using CenterFlow.Infrastructure.Hubs;
 using CenterFlow.Infrastructure.Services;
 using CenterFlow.Infrastructure.Settings;
 using Hangfire;
@@ -22,6 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddSignalR();
 builder.Services.AddScoped<IAppDbContext>(x => x.GetRequiredService<AppDbContext>());
 builder.Services.AddDbContext<AppDbContext>(x => x.UseSqlServer(builder.Configuration["cs"]));
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -92,5 +94,6 @@ RecurringJob.AddOrUpdate<IMarkCompletedSessionsJob>(
     x=>x.Execute(),
     Cron.Daily
     );
+app.MapHub<NotificationHub>("/hub/notifications");
 
 app.Run();
