@@ -13,15 +13,18 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
         : IRequestHandler<CreateBookingCommand, Response<Guid>>
     {
         private readonly IAppDbContext context;
+        private INotificationService notificationService;
         private readonly ICurrentUserService userService;
         private readonly RedLockFactory redLockFactory;
         public CreateBookingCommandHandler(IAppDbContext context
             ,ICurrentUserService userService
-            , RedLockFactory redLockFactory)
+            , RedLockFactory redLockFactory
+            ,INotificationService notificationService)
         {
             this.context = context;
             this.userService = userService;
             this.redLockFactory = redLockFactory;
+            this.notificationService = notificationService;
         }
         public async Task<Response<Guid>> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
         {
@@ -83,6 +86,13 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
             };
             await context.Books.AddAsync(book);
             await context.SaveChangesAsync();
+            await notificationService.SendAsync(
+    userId: userService.UserId.ToString(),
+    title: "New Booking",
+    body: $"You booked a session on {request.date}.",
+    type: NotificationType.BookingCreated,
+    referenceId: book.Id.ToString(),
+    cancellationToken: cancellationToken);
             return new Response<Guid>()
             {
                 Data = book.Id,

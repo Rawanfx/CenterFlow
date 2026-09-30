@@ -14,6 +14,7 @@ namespace CenterFlow.Application.Common.Interfaces
          DbSet<Student> Students { get; }
          DbSet<StudentBooking> StudentBookings { get; }
          DbSet<Subject> Subjects { get; }
+        DbSet<Notification> Notifications { get; }
          DbSet<TeacherAvailability> TeacherAvailabilities { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
