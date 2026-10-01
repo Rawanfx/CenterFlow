@@ -6,7 +6,7 @@ using CenterFlow.Application.Common.Exceptions;
 using CenterFlow.Domain.Entities;
 using RedLockNet.SERedis;
 
-namespace CenterFlow.Application.Features.Booking.StudentEnroll
+namespace CenterFlow.Application.Features.Enrollment.StudentEnroll
 {
    
     public class StudentEnrollCommandHandler:IRequestHandler<StudentEnrollCommand,Response<Guid>>

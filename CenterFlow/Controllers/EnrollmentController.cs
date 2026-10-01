@@ -1,5 +1,5 @@
 ﻿using CenterFlow.Application.Features.Booking.CancelEnrollment;
-using CenterFlow.Application.Features.Booking.StudentEnroll;
+using CenterFlow.Application.Features.Enrollment.StudentEnroll;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -9,10 +9,8 @@ namespace CenterFlow.Infrastructure.Data
 {
     public class AppDbContext:IdentityDbContext<ApplicationUser>,IAppDbContext
     {
-        private readonly IServiceProvider serviceProvider;
-        public AppDbContext(DbContextOptions<AppDbContext> options,IServiceProvider serviceProvider) :
+        public AppDbContext(DbContextOptions<AppDbContext> options) :
             base(options) {
-            this.serviceProvider = serviceProvider;
         }
         public DbSet<Teacher> Teachers => Set<Teacher>();
         public DbSet<Book> Books => Set<Book>();
@@ -42,15 +40,7 @@ namespace CenterFlow.Infrastructure.Data
 
             var result = await base.SaveChangesAsync(cancellationToken);
 
-            if (domainEvents.Any())
-            {
-                using var scope = serviceProvider.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-                foreach (var domainEvent in domainEvents)
-                    await mediator.Publish(domainEvent, cancellationToken);
-            }
-
+           
             return result;
         }
     }

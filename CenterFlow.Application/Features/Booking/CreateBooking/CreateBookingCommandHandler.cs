@@ -5,6 +5,7 @@ using CenterFlow.Application.Common.Models;
 using CenterFlow.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using RedLockNet;
 using RedLockNet.SERedis;
 
 namespace CenterFlow.Application.Features.Booking.CreateBooking
@@ -15,10 +16,10 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
         private readonly IAppDbContext context;
         private INotificationService notificationService;
         private readonly ICurrentUserService userService;
-        private readonly RedLockFactory redLockFactory;
+        private readonly IDistributedLockFactory redLockFactory;
         public CreateBookingCommandHandler(IAppDbContext context
             ,ICurrentUserService userService
-            , RedLockFactory redLockFactory
+            , IDistributedLockFactory redLockFactory
             ,INotificationService notificationService)
         {
             this.context = context;
