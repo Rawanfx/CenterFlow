@@ -68,6 +68,7 @@ builder.Services.AddScoped<RedLockFactory>(x =>
     { new DnsEndPoint(cs.Split(':')[0], int.Parse(cs.Split(':')[1])) };
     return RedLockFactory.Create(endpoint);
 });
+builder.Services.AddScoped<INotificationService, NotificationService>();
 var app = builder.Build();
 
  using (var scope=  app.Services.CreateAsyncScope())
