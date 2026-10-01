@@ -6,4 +6,5 @@
   <Project Path="../source/repos/CreateFlow/CenterFlow.Domain/CenterFlow.Domain.csproj" />
   <Project Path="../source/repos/CreateFlow/CenterFlow.Infrastructure/CenterFlow.Infrastructure.csproj" />
   <Project Path="../source/repos/CreateFlow/CenterFlow/CenterFlow.csproj" />
+  <Project Path="CenterFlow.UnitTests/CenterFlow.UnitTests.csproj" />
 </Solution>
