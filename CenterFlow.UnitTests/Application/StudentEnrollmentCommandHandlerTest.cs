@@ -213,5 +213,43 @@ namespace CenterFlow.UnitTests.Application
             await act.Should().ThrowAsync<ConflictException>().WithMessage("Please try again in a moment.");
 
         }
+        [Fact]
+        public async Task StudentEnrollment_ShouldCreateEnrollment_WhenLockAcquired()
+        {
+            var context = BuildInMemoryContext();
+            var student = new Student()
+            {
+                Id = Guid.NewGuid().ToString(),
+                FullName = "Test Student",
+                Email = "test@gmail.com",
+            };
+            var room = new Room()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test Room",
+                Capacity = 10
+            };
+            var book = new Book()
+            {
+                Id = Guid.NewGuid(),
+                Date = new DateOnly(2026, 10, 3),
+                From = new TimeSpan(13, 0, 0),
+                To = new TimeSpan(14, 0, 0),
+                RoomId = room.Id,
+                Status = Domain.Enum.BookingStatus.Confirmed,
+                TeacherId = Guid.NewGuid()
+            };
+            await context.Students.AddAsync(student);
+            await context.Rooms.AddAsync(room);
+            await context.Books.AddAsync(book);
+            await context.SaveChangesAsync();
+
+            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildDistributedLockFactory());
+            var enrollmentCommand = new StudentEnrollCommand(book.Id);
+            Func<Task> act = async () => await handler.Handle(enrollmentCommand, CancellationToken.None);
+            await act.Should().NotThrowAsync();
+
+
+        }
     } 
 }
