@@ -1,4 +1,6 @@
-﻿using CenterFlow.Domain.Enum;
+﻿using CenterFlow.Domain.Common;
+using CenterFlow.Domain.Enum;
+using CenterFlow.Domain.Events;
 
 namespace CenterFlow.Domain.Entities
 {
@@ -9,11 +11,13 @@ namespace CenterFlow.Domain.Entities
         public Teacher Teacher { get; set; }
         public Guid RoomId { get; set; }
         public Room Room { get; set; }
-        public DateTime  Date { get; set; }
+        public DateOnly  Date { get; set; }
         public TimeSpan From { get; set; }
         public TimeSpan To { get; set; }
-        public int StudentCount { get; set; }
         public BookingStatus Status { get; set; }
-     
+        public List<StudentBooking> StudentBookings = new List<StudentBooking>();
+
+
     }
+ 
 }

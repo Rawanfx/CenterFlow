@@ -106,7 +106,7 @@ namespace CenterFlow.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateOnly>("DayOfWeek")
+                    b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
                     b.Property<TimeSpan>("From")
@@ -116,9 +116,6 @@ namespace CenterFlow.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StudentCount")
                         .HasColumnType("int");
 
                     b.Property<Guid>("TeacherId")
@@ -183,19 +180,28 @@ namespace CenterFlow.Infrastructure.Migrations
 
             modelBuilder.Entity("CenterFlow.Domain.Entities.StudentBooking", b =>
                 {
-                    b.Property<Guid>("BookId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("StudentId")
+                    b.Property<Guid>("BookId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("EnrolledAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("StudentId1")
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("BookId", "StudentId");
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
 
                     b.HasIndex("StudentId1");
 

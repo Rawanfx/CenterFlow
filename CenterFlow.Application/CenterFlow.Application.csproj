@@ -8,12 +8,19 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Hangfire" Version="1.8.25" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.25" />
     <PackageReference Include="MediatR" Version="14.2.0" />
+<<<<<<< HEAD
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+=======
+    <PackageReference Include="RedLock.net" Version="2.3.2" />
+    <PackageReference Include="StackExchange.Redis" Version="3.3.1" />
+>>>>>>> 6c78d6cf3bc551908b313ce0b0d83e2f6d01a6e2
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Hotel.Domain\CenterFlow.Domain.csproj" />
+    <ProjectReference Include="..\CenterFlow.Domain\CenterFlow.Domain.csproj" />
   </ItemGroup>
 
 </Project>

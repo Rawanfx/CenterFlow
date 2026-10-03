@@ -1,25 +1,47 @@
 ﻿using CenterFlow.Application.Common.Interfaces;
+using CenterFlow.Domain.Common;
 using CenterFlow.Domain.Entities;
+using MediatR;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 namespace CenterFlow.Infrastructure.Data
 {
     public class AppDbContext:IdentityDbContext<ApplicationUser>,IAppDbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+        public AppDbContext(DbContextOptions<AppDbContext> options) :
+            base(options) {
+        }
         public DbSet<Teacher> Teachers => Set<Teacher>();
         public DbSet<Book> Books => Set<Book>();
-        public DbSet<Center> Centers => Set<Center>();
         public DbSet<Room> Rooms => Set<Room>();
         public DbSet<Student> Students => Set<Student>();
         public DbSet<StudentBooking> StudentBookings => Set<StudentBooking>();
         public DbSet<Subject> Subjects => Set<Subject>();
+        public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.Entity<StudentBooking>()
-                .HasKey(x => new { x.BookId, x.StudentId });
+            builder.Entity<TeacherAvailability>()
+                .HasQueryFilter(x => !x.IsDelete);
+        }
+        public override async Task<int> SaveChangesAsync( CancellationToken cancellationToken = default)
+        {
+            var entitiesWithEvents = ChangeTracker.Entries<BaseEntity>()
+               .Where(e => e.Entity.DomainEvents.Any())
+               .Select(e => e.Entity)
+               .ToList();
+            var domainEvents = entitiesWithEvents
+               .SelectMany(e => e.DomainEvents)
+               .ToList();
+            foreach (var entity in entitiesWithEvents)
+                entity.ClearDomainEvents();
+
+            var result = await base.SaveChangesAsync(cancellationToken);
+
+           
+            return result;
         }
     }
 }

@@ -18,11 +18,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="MimeKit" Version="4.18.1" />
+    <PackageReference Include="SendEmail.MailKit" Version="2.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Hotel.Application\CenterFlow.Application.csproj" />
-    <ProjectReference Include="..\Hotel.Domain\CenterFlow.Domain.csproj" />
+    <ProjectReference Include="..\CenterFlow.Application\CenterFlow.Application.csproj" />
+    <ProjectReference Include="..\CenterFlow.Domain\CenterFlow.Domain.csproj" />
   </ItemGroup>
 
 </Project>

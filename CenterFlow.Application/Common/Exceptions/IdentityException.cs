@@ -1,11 +1,10 @@
 ﻿namespace CenterFlow.Application.Common.Exceptions
 {
-    public class IdentityException:Exception
+    public class IdentityException:AppException
     {
-        public List<string> Errors { get;}
-        public IdentityException(List<string> errors):base()
+        public IdentityException(List<string> errors)
+            :base(string.Join(',',errors),400)
         {
-            Errors = errors;
         }
     }
 }

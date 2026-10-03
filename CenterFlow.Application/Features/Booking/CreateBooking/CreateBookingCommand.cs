@@ -4,6 +4,6 @@ using MediatR;
 
 namespace CenterFlow.Application.Features.Booking.CreateBooking;
 
-public record CreateBookingCommand( Guid RoomId, TimeSpan From, TimeSpan To, DateTime date)
+public record CreateBookingCommand( Guid RoomId, TimeSpan From, TimeSpan To, DateOnly date)
     : IRequest<Response<Guid>>;
 

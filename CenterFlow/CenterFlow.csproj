@@ -7,7 +7,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Hangfire" Version="1.8.25" />
+		<PackageReference Include="Hangfire.SqlServer" Version="1.8.25" />
 		<PackageReference Include="MediatR" Version="14.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
 
@@ -20,11 +23,13 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+
+		<PackageReference Include="RedLock.net" Version="2.3.2" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Hotel.Application\CenterFlow.Application.csproj" />
-		<ProjectReference Include="..\Hotel.Infrastructure\CenterFlow.Infrastructure.csproj" />
+		<ProjectReference Include="..\CenterFlow.Application\CenterFlow.Application.csproj" />
+		<ProjectReference Include="..\CenterFlow.Infrastructure\CenterFlow.Infrastructure.csproj" />
 	</ItemGroup>
 
 </Project>
