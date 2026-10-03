@@ -7,8 +7,6 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using RedLockNet;
-using RedLockNet.SERedis;
-using System.ComponentModel.DataAnnotations;
 
 namespace CenterFlow.UnitTests.Application
 {
