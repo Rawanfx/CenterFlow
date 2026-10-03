@@ -30,7 +30,7 @@ namespace CenterFlow.UnitTests.Application
             var redLockFactoryMock = new Mock<IDistributedLockFactory>();
 
             var redLockMock = new Mock<IRedLock>();
-            redLockMock.Setup(l => l.IsAcquired).Returns(false);   // الفرق الوحيد هنا
+            redLockMock.Setup(l => l.IsAcquired).Returns(false);  
 
             redLockFactoryMock
                 .Setup(x => x.CreateLockAsync(
