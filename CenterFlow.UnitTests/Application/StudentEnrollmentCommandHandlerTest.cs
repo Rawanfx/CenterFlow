@@ -37,6 +37,19 @@ namespace CenterFlow.UnitTests.Application
                 )).ReturnsAsync(redLockMock.Object);
             return mock.Object;
         }
+        private IDistributedLockFactory BuildFailingDistributedLockFactory()
+        {
+            var mock = new Mock<IDistributedLockFactory>();
+            var redLockMock = new Mock<IRedLock>();
+            redLockMock.Setup(x => x.IsAcquired).Returns(false);
+            mock.Setup(x => x.CreateLockAsync(
+                It.IsAny<string>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<TimeSpan>()
+                )).ReturnsAsync(redLockMock.Object);
+            return mock.Object;
+        }
         [Fact]
         public async Task StudentEnrollent_ShouldThrowConflictException_WhenBookinAnceled()
         {
@@ -117,5 +130,88 @@ namespace CenterFlow.UnitTests.Application
             await act.Should().ThrowAsync<ConflictException>().WithMessage("You are already enrolled in this session.");
 
         }
-    }
+        [Fact]
+        public async Task StudentEnrollent_ShouldThrowConflictException_WhenSessionIsFull()
+        {
+            var context = BuildInMemoryContext();
+            var student = new Student()
+            {
+                Id = Guid.NewGuid().ToString(),
+                FullName = "Test Student",
+                Email = "test@gmail.com",
+            };
+            var room = new Room()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test Room",
+                Capacity = 1
+            };
+            var book = new Book()
+            {
+                Id = Guid.NewGuid(),
+                Date = new DateOnly(2026, 10, 3),
+                From = new TimeSpan(13, 0, 0),
+                To = new TimeSpan(14, 0, 0),
+                RoomId = room.Id,
+                Status = Domain.Enum.BookingStatus.Confirmed,
+                TeacherId = Guid.NewGuid()
+            };
+            var existingEnrollment = new StudentBooking()
+            {
+                Id = Guid.NewGuid(),
+                BookId = book.Id,
+                EnrolledAt = DateTime.UtcNow,
+                IsCancelled = false,
+                StudentId = Guid.NewGuid()
+            };
+            await context.Students.AddAsync(student);
+            await context.Rooms.AddAsync(room);
+            await context.Books.AddAsync(book);
+            await context.StudentBookings.AddAsync(existingEnrollment);
+            await context.SaveChangesAsync();
+
+            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildDistributedLockFactory());
+            var enrollmentCommand = new StudentEnrollCommand(book.Id);
+            Func<Task> act = async () => await handler.Handle(enrollmentCommand, CancellationToken.None);
+            await act.Should().ThrowAsync<ConflictException>().WithMessage("This session is fully booked.");
+        }
+
+        [Fact]
+        public async Task StudentEnrollment_ShouldThrowConflictException_WhenLockNotAcquired()
+        {
+            var context = BuildInMemoryContext();
+            var student = new Student()
+            {
+                Id = Guid.NewGuid().ToString(),
+                FullName = "Test Student",
+                Email = "test@gmail.com",
+            };
+            var room = new Room()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test Room",
+                Capacity = 10
+            };
+            var book = new Book()
+            {
+                Id = Guid.NewGuid(),
+                Date = new DateOnly(2026, 10, 3),
+                From = new TimeSpan(13, 0, 0),
+                To = new TimeSpan(14, 0, 0),
+                RoomId = room.Id,
+                Status = Domain.Enum.BookingStatus.Confirmed,
+                TeacherId = Guid.NewGuid()
+            };
+            await context.Students.AddAsync(student);
+            await context.Rooms.AddAsync(room);
+            await context.Books.AddAsync(book);
+            await context.SaveChangesAsync();
+
+            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildFailingDistributedLockFactory());
+            var enrollmentCommand = new StudentEnrollCommand(book.Id);
+            Func<Task> act = async () => await handler.Handle(enrollmentCommand, CancellationToken.None);
+            await act.Should().ThrowAsync<ConflictException>().WithMessage("Please try again in a moment.");
+
+        }
+    } 
 }
