@@ -26,7 +26,7 @@ namespace CenterFlow.UnitTests.Application
             return mockUserService.Object;
         }
         [Fact]
-        public async Task DeleteAvailab_ShouldThrowNotFoundException_WhenAvailabilitySlotDoesNotExist()
+        public async Task DeleteAvailab_ShouldThrowNotFoundException_WhenAvailabilitySlotAlreadyDeleted()
         {
             // Arrange
             var context = BuildInMemoryContext();
@@ -139,6 +139,21 @@ namespace CenterFlow.UnitTests.Application
            await act.Should().NotThrowAsync();
             var updatedAvailability = await context.TeacherAvailabilities.FindAsync(availability.Id);
             updatedAvailability.IsDelete.Should().BeTrue();
+        }
+        [Fact]
+        public async Task DeleteAvailab_ShouldThrowNotFoundException_WhenAvailabilitySlotIdDoesNotExist()
+        {
+            var context = BuildInMemoryContext();
+            var teacher = new Teacher() { Id = Guid.NewGuid().ToString(), Email = "t@gmail.com", UserName = "teacher1", FullName = "Teacher One", SubjectId = Guid.NewGuid() };
+            await context.Teachers.AddAsync(teacher);
+            await context.SaveChangesAsync();
+
+            var userService = MockUser(teacher.Id);
+            var handler = new DeleteAvailableSlotCommandHandler(context, userService);
+            var command = new DeleteAvailableSlotCommand(Guid.NewGuid());   
+
+            Func<Task> act = async () => await handler.Handle(command, CancellationToken.None);
+            await act.Should().ThrowAsync<NotFoundException>().WithMessage("Availability slot not found.");
         }
     }
 }
