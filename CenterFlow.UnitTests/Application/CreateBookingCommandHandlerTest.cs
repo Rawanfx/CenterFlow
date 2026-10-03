@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using RedLockNet;
 using RedLockNet.SERedis;
+using System.ComponentModel.DataAnnotations;
 
 namespace CenterFlow.UnitTests.Application
 {
@@ -23,6 +24,24 @@ namespace CenterFlow.UnitTests.Application
         private class FakeCurrentUserService : ICurrentUserService
         {
             public string UserId { get; set; }
+        }
+        private IDistributedLockFactory BuildFailingRedLockFactory()
+        {
+            var redLockFactoryMock = new Mock<IDistributedLockFactory>();
+
+            var redLockMock = new Mock<IRedLock>();
+            redLockMock.Setup(l => l.IsAcquired).Returns(false);   // الفرق الوحيد هنا
+
+            redLockFactoryMock
+                .Setup(x => x.CreateLockAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<TimeSpan>(),
+                    It.IsAny<TimeSpan>(),
+                    It.IsAny<TimeSpan>(),
+                    null))
+                .ReturnsAsync(redLockMock.Object);
+
+            return redLockFactoryMock.Object;
         }
         private IDistributedLockFactory BuildRedLockFactory()
         {
@@ -258,6 +277,54 @@ namespace CenterFlow.UnitTests.Application
                 new DateOnly(2026, 10, 3));
             Func<Task> act = async () => await handler.Handle(bookingCommand, CancellationToken.None);
             await act.Should().NotThrowAsync();
+        }
+        [Fact]
+        public async Task Handle_ShouldThrowConflictException_WhenLockIsClosed()
+        {
+            var context = BuildInMemory();
+            Subject subject = new Subject()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test Subject"
+            };
+            var teacher = new Teacher()
+            {
+                Id = Guid.NewGuid().ToString(),
+                FullName = "Test Teacher",
+                Email = "t@gmail.com",
+                SubjectId = subject.Id
+            };
+            var availability = new TeacherAvailability()
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = Guid.Parse(teacher.Id),
+                From = new TimeSpan(9, 0, 0),
+                To = new TimeSpan(17, 0, 0),
+                DayOfWeek = DayOfWeek.Saturday
+            };
+            var room = new Room() { Id = Guid.NewGuid(), Capacity = 10, Name = "Room test" };
+            await context.Subjects.AddAsync(subject);
+            await context.Teachers.AddAsync(teacher);
+            await context.TeacherAvailabilities.AddAsync(availability);
+            await context.Rooms.AddAsync(room);
+            await context.SaveChangesAsync();
+
+            var fakeUser = new FakeCurrentUserService()
+            {
+                UserId = teacher.Id
+            };
+            var notificationServiceMock = new Mock<INotificationService>();
+            notificationServiceMock.Setup(x=>x.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()))
+                .Returns(Task.CompletedTask);
+            var failingRedLockFactory = BuildFailingRedLockFactory();
+            var handler = new CreateBookingCommandHandler(context, fakeUser, failingRedLockFactory, notificationServiceMock.Object);
+            var bookingCommand = new CreateBookingCommand(
+                room.Id,
+                new TimeSpan(13, 0, 0),
+                new TimeSpan(14, 0, 0),
+                new DateOnly(2026, 10, 3));
+            Func<Task> act = async () => await handler.Handle(bookingCommand, CancellationToken.None);
+            await act.Should().ThrowAsync<ConflictException>().WithMessage("Someone else is booking this room right now, please try again.");
         }
 
         [Fact]
