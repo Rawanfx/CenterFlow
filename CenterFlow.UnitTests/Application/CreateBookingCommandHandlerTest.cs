@@ -62,6 +62,7 @@ namespace CenterFlow.UnitTests.Application
                 From = new TimeSpan(10, 0, 0),
                 To = new TimeSpan(12, 0, 0),
                 Date = new DateOnly(2024, 6, 1),
+                Status = Domain.Enum.BookingStatus.Confirmed
             };
             await context.AddAsync(teacher);
             await context.AddAsync(room);
@@ -132,6 +133,72 @@ namespace CenterFlow.UnitTests.Application
             var handler =  new CreateBookingCommandHandler(context,FakeCurrentUserService,buildRedLockFactory,notificationServiceMock.Object);
             Func<Task> act = async () => await handler.Handle(bookingCommand, CancellationToken.None);
             await act.Should().ThrowAsync<ConflictException>().WithMessage("This room has been booked");
+        }
+        [Fact]
+        public async Task Handle_ShouldThrowConfilictException_WhenConfilictOnTeacherAvailable()
+        {
+            var context = BuildInMemory();
+            Subject subject = new Subject()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test Subject"
+            };
+            var teacher = new Teacher()
+            {
+                Id = Guid.NewGuid().ToString(),
+                FullName = "Test Teacher",
+                Email = "t@test.com",
+                UserName = "t@test.com",
+                SubjectId = subject.Id
+            };
+            var room = new Room() { Id = Guid.NewGuid(), Capacity = 10, Name = "Room test" };
+            var room2 = new Room() { Id = Guid.NewGuid(), Capacity = 10, Name = "Room test" };
+            var availability = new TeacherAvailability()
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = Guid.Parse(teacher.Id),
+                From = new TimeSpan(9, 0, 0),
+                To = new TimeSpan(17, 0, 0),
+                DayOfWeek = DayOfWeek.Saturday
+            };
+            var existingBooking = new Book()
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = Guid.Parse(teacher.Id),
+                RoomId = room.Id,
+                From = new TimeSpan(10, 0, 0),
+                To = new TimeSpan(12, 0, 0),
+                Date = new DateOnly(2026, 10, 3),
+                Status = Domain.Enum.BookingStatus.Confirmed
+            };
+            var bookingCommand = new CreateBookingCommand(
+                room2.Id,
+                new TimeSpan(10, 30, 0), // Overlaps with existing booking
+                new TimeSpan(12, 30, 0),
+                new DateOnly(2026, 10, 3));
+            
+            await context.Rooms.AddAsync(room);
+            await context.Rooms.AddAsync(room2);
+            await context.Subjects.AddAsync(subject);
+            await context.Books.AddAsync(existingBooking);
+            await context.Teachers.AddAsync(teacher);
+            await context.TeacherAvailabilities.AddAsync(availability);
+            await context.SaveChangesAsync();
+
+            var fakeUser = new FakeCurrentUserService()
+            {
+                UserId = teacher.Id
+            };
+
+            var redLock = BuildRedLockFactory();
+
+            var notificationServiceMock = new Mock<INotificationService>();
+            notificationServiceMock.Setup(x => x.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()));
+
+            var handler = new CreateBookingCommandHandler(context, fakeUser, redLock, notificationServiceMock.Object);
+
+            Func<Task> act = async () => await handler.Handle(bookingCommand, CancellationToken.None);
+            await act.Should().ThrowAsync<ConflictException>().WithMessage("You already have a booking during this time.");
         }
     }
 }
