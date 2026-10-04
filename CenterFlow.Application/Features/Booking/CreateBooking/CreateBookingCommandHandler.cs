@@ -67,7 +67,7 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
             var isConflict = await context.Books
     .AnyAsync(x => x.Status != Domain.Enum.BookingStatus.Cancelled
                 && x.Date == request.date
-                && (x.RoomId == request.RoomId || x.Teacher.Id == teacher.Id)
+                && (x.RoomId == request.RoomId || x.TeacherId ==Guid.Parse( teacher.Id))
                 && x.From < request.To
                 && x.To > request.From);
 
@@ -101,5 +101,6 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
                 Success = true
             };
         }
+        
     }
 }

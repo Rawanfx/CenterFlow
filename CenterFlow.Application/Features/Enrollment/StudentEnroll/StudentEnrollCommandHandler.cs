@@ -1,9 +1,10 @@
-﻿using MediatR;
+﻿using CenterFlow.Application.Common.Exceptions;
 using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Application.Common.Models;
-using Microsoft.EntityFrameworkCore;
-using CenterFlow.Application.Common.Exceptions;
 using CenterFlow.Domain.Entities;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using RedLockNet;
 using RedLockNet.SERedis;
 
 namespace CenterFlow.Application.Features.Enrollment.StudentEnroll
@@ -13,10 +14,10 @@ namespace CenterFlow.Application.Features.Enrollment.StudentEnroll
     {
         private readonly IAppDbContext context;
         private readonly ICurrentUserService userService;
-        private readonly RedLockFactory redLockFactory;
+        private readonly IDistributedLockFactory redLockFactory;
         public StudentEnrollCommandHandler(IAppDbContext context
             ,ICurrentUserService userService
-            ,RedLockFactory redLockFactory)
+            , IDistributedLockFactory redLockFactory)
         {
             this.context = context;
             this.userService = userService;
@@ -29,6 +30,7 @@ namespace CenterFlow.Application.Features.Enrollment.StudentEnroll
             var book = await context.Books
                 .Include(x=>x.Room)
                 .FirstOrDefaultAsync(x => x.Id == request.BookId);
+
             if (student == null || book == null)
                 throw new ConflictException("Data not found");
             if (book.Status == Domain.Enum.BookingStatus.Cancelled)
@@ -39,18 +41,19 @@ namespace CenterFlow.Application.Features.Enrollment.StudentEnroll
     expiryTime: TimeSpan.FromSeconds(10),
     waitTime: TimeSpan.FromSeconds(2),
     retryTime: TimeSpan.FromMilliseconds(200));
+
+            if (!redLock.IsAcquired)
+                throw new ConflictException("Please try again in a moment.");
             var alreadyEnrolled = await context.StudentBookings
     .AnyAsync(x => x.StudentId == Guid.Parse(student.Id)
     && x.BookId == request.BookId
-    && !x.IsCancelled);
+    && x.Status != Domain.Enum.StudentBookingStatus.Cancelled);
             if (alreadyEnrolled)
                 throw new ConflictException("You are already enrolled in this session.");
 
 
-            if (!redLock.IsAcquired)
-                throw new ConflictException("Please try again in a moment.");
             var studentCount = await context.StudentBookings
-                .Where(x => x.BookId == request.BookId && !x.IsCancelled)
+                .Where(x => x.BookId == request.BookId && x.Status != Domain.Enum.StudentBookingStatus.Cancelled)
                 .CountAsync();
             if (studentCount + 1 > book.Room.Capacity)
                 throw new ConflictException("This session is fully booked.");
@@ -58,8 +61,8 @@ namespace CenterFlow.Application.Features.Enrollment.StudentEnroll
             {
                 BookId = request.BookId,
                 EnrolledAt = DateTime.UtcNow,
-                IsCancelled = false,
-                StudentId = Guid.Parse(student.Id)
+                StudentId = Guid.Parse(student.Id),
+                Status = Domain.Enum.StudentBookingStatus.Pending
             };
             await context.StudentBookings.AddAsync(studentBook);
             await context.SaveChangesAsync();

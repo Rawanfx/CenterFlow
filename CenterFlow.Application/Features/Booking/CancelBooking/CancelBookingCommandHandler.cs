@@ -32,7 +32,7 @@ namespace CenterFlow.Application.Features.Booking.CancelBooking
             book.Status = Domain.Enum.BookingStatus.Cancelled;
             var enrollment = await context.StudentBookings
                 .Include(x=>x.Student)
-                .Where(x => x.BookId == request.BookId && !x.IsCancelled).ToListAsync();
+                .Where(x => x.BookId == request.BookId &&x.Status!=Domain.Enum.StudentBookingStatus.Cancelled).ToListAsync();
             var sendEmail = enrollment
                 .Select(x => new SendEmailDto()
                 {
@@ -45,7 +45,7 @@ namespace CenterFlow.Application.Features.Booking.CancelBooking
                 }).ToList();
             foreach (var i in enrollment)
             {
-                i.IsCancelled = true;
+               i.Status = Domain.Enum.StudentBookingStatus.Cancelled;
             }
             await context.SaveChangesAsync();
            

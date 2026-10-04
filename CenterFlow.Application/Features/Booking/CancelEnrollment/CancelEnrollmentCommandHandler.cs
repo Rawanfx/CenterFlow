@@ -20,10 +20,10 @@ namespace CenterFlow.Application.Features.Booking.CancelEnrollment
             var studentEnroll = await context.StudentBookings
                 .FirstOrDefaultAsync(x => x.Id == request.EnrollId 
                 && x.StudentId == Guid.Parse(userService.UserId)
-                && !x.IsCancelled);
+                && x.Status != Domain.Enum.StudentBookingStatus.Cancelled);
             if ( studentEnroll == null)
                 throw new NotFoundException("Data not found");
-            studentEnroll.IsCancelled = true;
+            studentEnroll.Status = Domain.Enum.StudentBookingStatus.Cancelled;
             await context.SaveChangesAsync();
             return new Response<string>() { Success = true, Message = "Cancelled Successfully" };
         }
