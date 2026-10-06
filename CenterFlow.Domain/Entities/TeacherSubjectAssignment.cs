@@ -14,5 +14,6 @@ namespace CenterFlow.Domain.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public Subject Subject { get; set; }
         public Guid SubjectId { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }
