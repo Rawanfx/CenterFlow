@@ -22,7 +22,7 @@ namespace CenterFlow.Application.Features.Rates.AddTeacherRating
 
             var rating = await context.Rates.AnyAsync(x => x.StudentId == userService.UserId && x.TeacherGradeLevelId == request.TeacherSubjectAssignmentId);
             if (rating)
-                throw new InvalidOperationException("You have already rated this teacher for this subject."
+                throw new ConflictException("You have already rated this teacher for this subject."
 
 );
 

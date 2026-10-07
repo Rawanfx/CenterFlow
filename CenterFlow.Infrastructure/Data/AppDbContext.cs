@@ -31,7 +31,7 @@ namespace CenterFlow.Infrastructure.Data
                 .HasQueryFilter(x => !x.IsDelete);
 
             builder.Entity<TeacherSubjectAssignment>()
-                .HasQueryFilter(x => !x.IsActive);
+                .HasQueryFilter(x => x.IsActive);
 
             builder.Entity<TeacherRatings>()
                 .HasIndex(x=>new { x.StudentId, x.TeacherGradeLevelId }).IsUnique();
