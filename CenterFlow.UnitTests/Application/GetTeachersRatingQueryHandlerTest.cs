@@ -165,5 +165,45 @@ namespace CenterFlow.UnitTests.Application
             result[0].TeacherName.Should().Be("tech1");
             result[0].TotalRates.Should().Be(4);
         }
+        [Fact]
+        public async Task Handle_ShouldReturnZeroRating_WhenNoRatings()
+        {
+            var context = BuildMockDbContext();
+            var teacher = new Teacher()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Email = "t@gmail.com",
+                FullName = "t1"
+            };
+            var grade = new GradeLevel() { Id = Guid.NewGuid(), Name = "Prep1" };
+            var subject = new Subject()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Arabic"
+            };
+            var teacherSubjectAssignment = new TeacherSubjectAssignment()
+            {
+                Id = Guid.NewGuid(),
+                GradeLevelId = grade.Id,
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true,
+                SubjectId = subject.Id,
+                TeacherId = teacher.Id
+            };
+            await context.Subjects.AddAsync(subject);
+            await context.GradeLevels.AddAsync(grade);
+            await context.Teachers.AddAsync(teacher);
+            await context.TeacherSubjectAssignment.AddAsync(teacherSubjectAssignment);
+            await context.SaveChangesAsync();
+
+            var query = new GetTeacherRatingQuery(subject.Id, grade.Id);
+            var handler = new GetTeacherRatingQueryHandler(context);
+            var result = await handler.Handle(query, CancellationToken.None);
+            result.Should().HaveCount(1);
+            result[0].Rating.Should().Be(0);
+            result[0].TeacherName.Should().Be("t1");
+            result[0].TeacherGradeLevelId.Should().Be(teacherSubjectAssignment.Id);
+            result[0].TotalRates.Should().Be(0);
+        }
     }
 }
