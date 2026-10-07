@@ -168,5 +168,81 @@ namespace CenterFlow.UnitTests.Application
             Func<Task> act = async () => await handler.Handle(command, CancellationToken.None);
             await act.Should().ThrowAsync<NotFoundException>().WithMessage("Data not found"); 
         }
+        [Fact]
+        public async Task Handle_ShouldThrowConflictException_WhenAlreadyRated()
+        {
+            var context = BuildInMemory();
+            Student student = new Student()
+            {
+                Id = Guid.NewGuid().ToString(),
+                FullName = "Rawan",
+                Email = "st1@gmail.com"
+            };
+            var teacher = new Teacher()
+            {
+                Id = Guid.NewGuid().ToString(),
+                FullName = "Ahmed",
+                Email = "tech1@gmail.com"
+            };
+            var book = new Book()
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = Guid.Parse(teacher.Id),
+                RoomId = Guid.NewGuid(),
+                From = new TimeSpan(3, 0, 0),
+                To = new TimeSpan(4, 0, 0),
+                Status = Domain.Enum.BookingStatus.Pending
+            };
+            var studentBook2 = new StudentBooking()
+            {
+                Id = Guid.NewGuid(),
+                BookId = book.Id,
+                StudentId = Guid.Parse(student.Id),
+                Status = Domain.Enum.StudentBookingStatus.Pending,
+            };
+            var grade = new GradeLevel()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Prep1"
+            };
+            var subject = new Subject()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Arabic"
+            };
+            var assign = new TeacherSubjectAssignment()
+            {
+                Id = Guid.NewGuid(),
+                IsActive = true,
+                GradeLevelId = grade.Id,
+                SubjectId = subject.Id,
+                TeacherId = teacher.Id
+            };
+            var rate = new TeacherRatings()
+            {
+                Id = Guid.NewGuid(),
+                Rate = 2,
+                StudentBookingId = studentBook2.Id,
+                TeacherGradeLevelId = assign.Id,
+                StudentId = student.Id,
+            };
+            await context.Students.AddAsync(student );
+            await context.Teachers.AddAsync(teacher);
+            await context.GradeLevels.AddAsync(grade);
+            await context.Subjects.AddAsync(subject);
+            await context.Books.AddAsync(book);
+            await context.StudentBookings.AddAsync(studentBook2);
+            await context.TeacherSubjectAssignment.AddAsync(assign);
+            await context.Rates.AddAsync(rate);
+            await context.SaveChangesAsync();
+
+            var userService = CurrentUserServiceMock(student.Id);
+            var command = new AddTeacherRatingCommand(assign.Id, 5, studentBook2.Id, string.Empty);
+            var handler = new AddTeacherRatingCommandHandler(context, userService);
+            Func<Task> act = async () => await handler.Handle(command, CancellationToken.None);
+            await act.Should().ThrowAsync<ConflictException>().WithMessage("You have already rated this teacher for this subject.");
+
+
+        }
     }
 }
