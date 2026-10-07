@@ -10,7 +10,7 @@ using Moq;
 
 namespace CenterFlow.UnitTests.Application
 {
-    public class AvailabilityCommandHandlerTest
+    public class DeleteAvailabilityCommandHandlerTest
     {
         private AppDbContext BuildInMemoryContext()
         {

@@ -2,6 +2,7 @@
 using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Application.Features.Enrollment.StudentEnroll;
 using CenterFlow.Domain.Entities;
+using CenterFlow.Domain.Enum;
 using CenterFlow.Infrastructure.Data;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -116,8 +117,8 @@ namespace CenterFlow.UnitTests.Application
                 Id = Guid.NewGuid(),
                 BookId = book.Id,
                 EnrolledAt = DateTime.UtcNow,
-                IsCancelled = false,
-                StudentId = Guid.Parse(student.Id)
+                StudentId = Guid.Parse(student.Id),
+                Status = StudentBookingStatus.Pending
             };
             await context.Students.AddAsync(student);
             await context.Rooms.AddAsync(room);
@@ -161,7 +162,7 @@ namespace CenterFlow.UnitTests.Application
                 Id = Guid.NewGuid(),
                 BookId = book.Id,
                 EnrolledAt = DateTime.UtcNow,
-                IsCancelled = false,
+                Status = StudentBookingStatus.Pending,
                 StudentId = Guid.NewGuid()
             };
             await context.Students.AddAsync(student);
