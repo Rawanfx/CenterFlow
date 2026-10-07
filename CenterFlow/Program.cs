@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using RedLockNet;
 using RedLockNet.SERedis;
 using RedLockNet.SERedis.Configuration;
 using System.Net;
@@ -61,7 +62,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(IMarker).Assembly));
-builder.Services.AddScoped<RedLockFactory>(x =>
+builder.Services.AddScoped<IDistributedLockFactory>(x =>
 {
     var cs = builder.Configuration["Redis"];
     var endpoint = new List<RedLockEndPoint>()

@@ -18,11 +18,11 @@ namespace CenterFlow.Application.Features.Availability.GetAvailableSlots
                  .Where(x => x.TeacherId == request.TeacherId
                  && x.Status != Domain.Enum.BookingStatus.Cancelled
                  && x.Date == request.date
-                 && x.StudentBookings.Count(u => !u.IsCancelled) + 1 <= x.Room.Capacity)
+                 && x.StudentBookings.Count(u => u.Status!=Domain.Enum.StudentBookingStatus.Cancelled) + 1 <= x.Room.Capacity)
                  .AsNoTracking()
                  .Select(y=> new GetAvailableSessionsDto()
                  {
-                     AvaliableSeats = y.Room.Capacity-y.StudentBookings.Count(u => !u.IsCancelled),
+                     AvaliableSeats = y.Room.Capacity-y.StudentBookings.Count(u => u.Status!=Domain.Enum.StudentBookingStatus.Cancelled),
                      BookId=y.Id,
                      From = y.From,
                      To = y.To,
