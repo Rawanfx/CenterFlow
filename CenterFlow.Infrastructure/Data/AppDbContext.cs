@@ -19,6 +19,7 @@ namespace CenterFlow.Infrastructure.Data
         public DbSet<Subject> Subjects => Set<Subject>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
+        public DbSet<Admins> Admins => Set<Admins>();
 
         public DbSet<GradeLevel> GradeLevels => Set<GradeLevel>();
         public DbSet<TeacherSubjectAssignment> TeacherSubjectAssignment => Set<TeacherSubjectAssignment>();
