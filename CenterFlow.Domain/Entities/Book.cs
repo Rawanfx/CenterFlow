@@ -20,6 +20,8 @@ namespace CenterFlow.Domain.Entities
         [ForeignKey(nameof (TeacherSubjectAssignment))]
         public Guid TeacherSubjectAssignId { get; set; }
         public TeacherSubjectAssignment TeacherSubjectAssignment { get; set; }
+        public DateTime? ReminderSentAt { get; set; }
+
 
     }
  

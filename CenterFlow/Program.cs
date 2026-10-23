@@ -24,6 +24,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.Configure<SessionReminderSetting>(builder.Configuration.GetSection("SessionReminder"));
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IAppDbContext>(x => x.GetRequiredService<AppDbContext>());
 builder.Services.AddDbContext<AppDbContext>(x => x.UseSqlServer(builder.Configuration["cs"]));

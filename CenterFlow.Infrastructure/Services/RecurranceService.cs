@@ -2,6 +2,7 @@
 using CenterFlow.Domain.Enum;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
+using Ical.Net.Evaluation;
 
 namespace CenterFlow.Infrastructure.Services
 {
