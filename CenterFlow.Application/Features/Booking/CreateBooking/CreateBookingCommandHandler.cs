@@ -75,6 +75,11 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
                 throw new ConflictException("This room has been booked");
             if (isConflict)
                 throw new ConflictException("You already have a booking during this time.");
+
+            var teacherAssign = await context.TeacherSubjectAssignment
+                .FirstOrDefaultAsync(x => x.Id == request.TeacherSubjectAssign && x.TeacherId == teacher.Id);
+            if (teacherAssign == null)
+                throw new NotFoundException("Invalid Data");
             var book = new Book()
             {
                 Date = request.date,
@@ -83,7 +88,8 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
                 RoomId = request.RoomId,
                 Status = Domain.Enum.BookingStatus.Confirmed,
                 TeacherId = Guid.Parse(userService.UserId),
-                To = request.To
+                To = request.To,
+                TeacherSubjectAssignId=request.TeacherSubjectAssign
             };
             await context.Books.AddAsync(book);
             await context.SaveChangesAsync();
