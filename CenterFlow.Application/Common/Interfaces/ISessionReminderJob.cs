@@ -2,6 +2,6 @@
 {
     public interface ISessionReminderJob
     {
-        Task Exceute();
+        Task SendAsync(Guid bookId);
     }
 }

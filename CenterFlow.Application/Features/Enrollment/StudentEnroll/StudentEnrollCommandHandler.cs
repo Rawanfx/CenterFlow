@@ -32,8 +32,17 @@ namespace CenterFlow.Application.Features.Enrollment.StudentEnroll
         {
             var student = await context.Students.FirstOrDefaultAsync(x => x.Id == userService.UserId);
             var book = await context.Books
-                .Include(x=>x.Room)
-                .FirstOrDefaultAsync(x => x.Id == request.BookId);
+                .Where(x => x.Id == request.BookId)
+                .Select(x=>new {
+
+                    x.Id,
+                    x.Date,
+                    x.From,
+                    x.Status,
+                    RoomCapacity = x.Room.Capacity, 
+                    TeacherName = x.Teacher.FullName 
+                })
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (student == null || book == null)
                 throw new ConflictException("Data not found");
@@ -59,7 +68,7 @@ namespace CenterFlow.Application.Features.Enrollment.StudentEnroll
             var studentCount = await context.StudentBookings
                 .Where(x => x.BookId == request.BookId && x.Status != Domain.Enum.StudentBookingStatus.Cancelled)
                 .CountAsync();
-            if (studentCount + 1 > book.Room.Capacity)
+            if (studentCount + 1 > book.RoomCapacity)
                 throw new ConflictException("This session is fully booked.");
             var studentBook = new StudentBooking()
             {
@@ -70,10 +79,10 @@ namespace CenterFlow.Application.Features.Enrollment.StudentEnroll
             };
             await context.StudentBookings.AddAsync(studentBook);
             await context.SaveChangesAsync();
-            var notify = book.Date.ToDateTime(TimeOnly.FromTimeSpan(book.From)).AddMinutes(-30);
-            string title = "Class Reminder";
-            string body = $"Hello {student.FullName}, your session with {book.Teacher.FullName} starts at {book.From} in 30 minutes. Get ready and good luck!";
-            backgroundJobClient.Schedule<INotificationService>(x => x.SendAsync(userService.UserId, title, body, NotificationType.SessionReminder), notify);
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time");
+            var local = book.Date.ToDateTime(TimeOnly.FromTimeSpan(book.From)).AddMinutes(-30);
+            var runAt = new DateTimeOffset(local, tz.GetUtcOffset(local));
+            backgroundJobClient.Schedule<ISessionReminderJob>(x => x.SendAsync(request.BookId), runAt);
             return new Response<Guid>()
             {
                 Success = true,

@@ -1,8 +1,7 @@
-﻿
-using CenterFlow.Application.Common.Interfaces;
-using CenterFlow.Infrastructure.Settings;
+﻿using CenterFlow.Application.Common.Interfaces;
+using CenterFlow.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace CenterFlow.Infrastructure.Jobs
 {
@@ -10,32 +9,55 @@ namespace CenterFlow.Infrastructure.Jobs
     {
         private readonly IAppDbContext context;
         private readonly INotificationService notificationService;
-        private SessionReminderSetting setting;
-        public SessionReminderJob(IAppDbContext context
-            ,INotificationService notificationService
-            ,IOptions<SessionReminderSetting> options)
+        private readonly ILogger<SessionReminderJob> logger;
+        public SessionReminderJob (  IAppDbContext context
+            , INotificationService notificationService
+            ,ILogger<SessionReminderJob>logger)
         {
-            this.context = context;
             this.notificationService = notificationService;
-            setting = options.Value;
+            this.context = context;
+            this.logger = logger;
         }
-        public async Task Exceute()
+        public async Task SendAsync(Guid bookId)
         {
-            var books = await context.Books
-                .Where(x => x.Status != Domain.Enum.BookingStatus.Cancelled
-                && x.Date == DateOnly.FromDateTime(DateTime.UtcNow)
-                && x.ReminderSentAt != DateTime.UtcNow
-                )
-                .ToListAsync();
-            foreach (var i in books)
+            var book = await context.Books
+                .Where(x => x.Id == bookId && x.Status != Domain.Enum.BookingStatus.Cancelled)
+                .Select(x=>new {x.TeacherId, x.Teacher.FullName,x.From})
+                .FirstOrDefaultAsync();
+            var studentBook = await context.StudentBookings
+                .Where(x => x.BookId == bookId && x.Status != Domain.Enum.StudentBookingStatus.Cancelled)
+                .Select(x => new
+                {
+                    x.StudentId,
+                    x.Student.FullName,
+                   
+                }).ToListAsync();
+            if (book == null) return;
+            
+            string body = $"Hello {book.FullName}, just a reminder that your session starts at {book.From} in 30 minutes. Have a great session!";
+
+         await SafeSend(book.TeacherId.ToString ( )  , "Session Reminder", body, bookId);
+            foreach (var i in studentBook)
             {
-                i.ReminderSentAt = DateTime.UtcNow;
-                await notificationService.SendAsync(i.TeacherId.ToString(), "Session Reminder", "", NotificationType.SessionReminder);
-                foreach (var j in i.StudentBookings) 
-                await notificationService.SendAsync(j.StudentId.ToString(), "Session Reminder", "", NotificationType.SessionReminder)
-;
+                string title = "Class Reminder";
+                string studentBody = $"Hello {i.FullName}, your session with {book.FullName} starts at {book.From} in 30 minutes. Get ready and good luck!";
+                await SafeSend(i.StudentId.ToString(), title, body, bookId);
+
             }
-            await context.SaveChangesAsync();
+        }
+        private async Task SafeSend(string userId, string title, string body, Guid bookId)
+        {
+            try
+            {
+                await notificationService.SendAsync(userId, title, body,
+                    NotificationType.SessionReminder, bookId.ToString());
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex,
+       "Failed to send session reminder to user {UserId} for book {BookId}",
+       userId, bookId);
+            }
         }
     }
 }

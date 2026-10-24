@@ -107,7 +107,7 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
             var notifyTime = book.Date.ToDateTime(TimeOnly.FromTimeSpan(book.From)).AddMinutes(-30);
             string body = $"Hello {teacher.FullName}, just a reminder that your session starts at {request.From} in 30 minutes. Have a great session!";
 
-            backgroundJobClient.Schedule<INotificationService>(x => x.SendAsync(userService.UserId,"Session Reminder",body,NotificationType.SessionReminder),notifyTime);
+            backgroundJobClient.Schedule<ISessionReminderJob>(x => x.SendAsync(book.Id),notifyTime);
             return new Response<Guid>()
             {
                 Data = book.Id,
