@@ -2,6 +2,7 @@
 using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Application.Common.Models;
 using CenterFlow.Domain.Entities;
+using Hangfire;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using RedLockNet;
@@ -15,13 +16,16 @@ namespace CenterFlow.Application.Features.Enrollment.StudentEnroll
         private readonly IAppDbContext context;
         private readonly ICurrentUserService userService;
         private readonly IDistributedLockFactory redLockFactory;
+        private readonly IBackgroundJobClient backgroundJobClient;
         public StudentEnrollCommandHandler(IAppDbContext context
             ,ICurrentUserService userService
-            , IDistributedLockFactory redLockFactory)
+            , IDistributedLockFactory redLockFactory
+            , IBackgroundJobClient backgroundJobClient)
         {
             this.context = context;
             this.userService = userService;
             this.redLockFactory = redLockFactory;
+            this.backgroundJobClient = backgroundJobClient;
         }
 
         public async Task<Response<Guid>> Handle(StudentEnrollCommand request, CancellationToken cancellationToken)
@@ -66,6 +70,10 @@ namespace CenterFlow.Application.Features.Enrollment.StudentEnroll
             };
             await context.StudentBookings.AddAsync(studentBook);
             await context.SaveChangesAsync();
+            var notify = book.Date.ToDateTime(TimeOnly.FromTimeSpan(book.From)).AddMinutes(-30);
+            string title = "Class Reminder";
+            string body = $"Hello {student.FullName}, your session with {book.Teacher.FullName} starts at {book.From} in 30 minutes. Get ready and good luck!";
+            backgroundJobClient.Schedule<INotificationService>(x => x.SendAsync(userService.UserId, title, body, NotificationType.SessionReminder), notify);
             return new Response<Guid>()
             {
                 Success = true,
