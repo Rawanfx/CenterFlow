@@ -21,7 +21,8 @@ namespace CenterFlow.Domain.Entities
         public Guid TeacherSubjectAssignId { get; set; }
         public TeacherSubjectAssignment TeacherSubjectAssignment { get; set; }
         public DateTime? ReminderSentAt { get; set; }
-
+        public Guid? RecurringBookingId { get; set; }
+        public RecurringBooking? RecurringBooking { get; set; }
 
     }
  

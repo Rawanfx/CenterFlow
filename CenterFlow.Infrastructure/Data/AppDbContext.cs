@@ -24,7 +24,7 @@ namespace CenterFlow.Infrastructure.Data
         public DbSet<GradeLevel> GradeLevels => Set<GradeLevel>();
         public DbSet<TeacherSubjectAssignment> TeacherSubjectAssignment => Set<TeacherSubjectAssignment>();
         public DbSet<TeacherRatings> Rates => Set<TeacherRatings>();
-
+        public DbSet<RecurringBooking> RecurringBookings => Set<RecurringBooking>();
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

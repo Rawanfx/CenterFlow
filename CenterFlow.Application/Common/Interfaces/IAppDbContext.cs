@@ -21,6 +21,7 @@ namespace CenterFlow.Application.Common.Interfaces
         DbSet<TeacherRatings> Rates { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         DbSet<Admins> Admins { get; }
+        DbSet<RecurringBooking> RecurringBookings { get; }
 
     }
 }
