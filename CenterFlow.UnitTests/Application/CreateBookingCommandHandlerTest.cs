@@ -4,6 +4,7 @@ using CenterFlow.Application.Features.Booking.CreateBooking;
 using CenterFlow.Domain.Entities;
 using CenterFlow.Infrastructure.Data;
 using FluentAssertions;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using RedLockNet;
@@ -88,12 +89,15 @@ namespace CenterFlow.UnitTests.Application
 
             var fakeCurrentUserService = new FakeCurrentUserService { UserId = teacher.Id };
             var mockRedLockFactory = BuildRedLockFactory();
-            var handler = new CreateBookingCommandHandler(context, fakeCurrentUserService, mockRedLockFactory, mockNotiticationService.Object);
+            var jobClientMock = new Mock<IBackgroundJobClient>();
+
+            var handler = new CreateBookingCommandHandler(context, fakeCurrentUserService, mockRedLockFactory, mockNotiticationService.Object,jobClientMock.Object);
             var command = new CreateBookingCommand(
                 room.Id,
                 new TimeSpan(11, 0, 0), // Overlaps with existing booking
                 new TimeSpan(13, 0, 0),
-                new DateOnly(2024, 6, 1));
+                new DateOnly(2024, 6, 1),
+                Guid.NewGuid(),null);
             Func<Task> act = async () => await handler.Handle(command, CancellationToken.None);
             await act.Should().ThrowAsync<ConflictException>().WithMessage("This time is outside your declared availability.");
         }
@@ -136,7 +140,7 @@ namespace CenterFlow.UnitTests.Application
                 room.Id,
                 new TimeSpan(11, 0, 0), // Overlaps with existing booking
                 new TimeSpan(13, 0, 0),
-                new DateOnly(2026, 10, 3));
+                new DateOnly(2026, 10, 3),Guid.NewGuid(),null);
             await context.Rooms.AddAsync(room);
             await context.Subjects.AddAsync(subject);
             await context.Books.AddAsync(existingBooking);
@@ -147,7 +151,9 @@ namespace CenterFlow.UnitTests.Application
             var buildRedLockFactory = BuildRedLockFactory();
             var notificationServiceMock = new Mock<INotificationService>();
             notificationServiceMock.Setup(x => x.SendAsync(FakeCurrentUserService.UserId, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()));
-            var handler = new CreateBookingCommandHandler(context, FakeCurrentUserService, buildRedLockFactory, notificationServiceMock.Object);
+            var jobClientMock = new Mock<IBackgroundJobClient>();
+
+            var handler = new CreateBookingCommandHandler(context, FakeCurrentUserService, buildRedLockFactory, notificationServiceMock.Object,jobClientMock.Object);
             Func<Task> act = async () => await handler.Handle(bookingCommand, CancellationToken.None);
             await act.Should().ThrowAsync<ConflictException>().WithMessage("This room has been booked");
         }
@@ -192,7 +198,7 @@ namespace CenterFlow.UnitTests.Application
                 room2.Id,
                 new TimeSpan(10, 30, 0), // Overlaps with existing booking
                 new TimeSpan(12, 30, 0),
-                new DateOnly(2026, 10, 3));
+                new DateOnly(2026, 10, 3),Guid.NewGuid(),null);
 
             await context.Rooms.AddAsync(room);
             await context.Rooms.AddAsync(room2);
@@ -211,8 +217,9 @@ namespace CenterFlow.UnitTests.Application
 
             var notificationServiceMock = new Mock<INotificationService>();
             notificationServiceMock.Setup(x => x.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()));
+            var jobClientMock = new Mock<IBackgroundJobClient>();
 
-            var handler = new CreateBookingCommandHandler(context, fakeUser, redLock, notificationServiceMock.Object);
+            var handler = new CreateBookingCommandHandler(context, fakeUser, redLock, notificationServiceMock.Object,jobClientMock.Object);
 
             Func<Task> act = async () => await handler.Handle(bookingCommand, CancellationToken.None);
             await act.Should().ThrowAsync<ConflictException>().WithMessage("You already have a booking during this time.");
@@ -265,14 +272,15 @@ namespace CenterFlow.UnitTests.Application
             };
             var fakeRedLockFactory = BuildRedLockFactory();
             var notificationServiceMock = new Mock<INotificationService>();
+            var jobClientMock = new Mock<IBackgroundJobClient>();
             notificationServiceMock.Setup(x => x.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()))
                 .Returns(Task.CompletedTask);
-            var handler = new CreateBookingCommandHandler(context, fakeUser, fakeRedLockFactory, notificationServiceMock.Object);
+            var handler = new CreateBookingCommandHandler(context, fakeUser, fakeRedLockFactory, notificationServiceMock.Object, jobClientMock.Object);
             var bookingCommand = new CreateBookingCommand(
                 room.Id,
                 new TimeSpan(13, 0, 0), // No overlap with existing booking
                 new TimeSpan(14, 0, 0),
-                new DateOnly(2026, 10, 3));
+                new DateOnly(2026, 10, 3),Guid.NewGuid(),null);
             Func<Task> act = async () => await handler.Handle(bookingCommand, CancellationToken.None);
             await act.Should().NotThrowAsync();
         }
@@ -315,12 +323,14 @@ namespace CenterFlow.UnitTests.Application
             notificationServiceMock.Setup(x=>x.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()))
                 .Returns(Task.CompletedTask);
             var failingRedLockFactory = BuildFailingRedLockFactory();
-            var handler = new CreateBookingCommandHandler(context, fakeUser, failingRedLockFactory, notificationServiceMock.Object);
+            var jobClientMock = new Mock<IBackgroundJobClient>();
+
+            var handler = new CreateBookingCommandHandler(context, fakeUser, failingRedLockFactory, notificationServiceMock.Object,jobClientMock.Object);
             var bookingCommand = new CreateBookingCommand(
                 room.Id,
                 new TimeSpan(13, 0, 0),
                 new TimeSpan(14, 0, 0),
-                new DateOnly(2026, 10, 3));
+                new DateOnly(2026, 10, 3),Guid.NewGuid(),null);
             Func<Task> act = async () => await handler.Handle(bookingCommand, CancellationToken.None);
             await act.Should().ThrowAsync<ConflictException>().WithMessage("Someone else is booking this room right now, please try again.");
         }
@@ -375,12 +385,14 @@ namespace CenterFlow.UnitTests.Application
             var notificationServiceMock = new Mock<INotificationService>();
             notificationServiceMock.Setup(x => x.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()))
                 .Returns(Task.CompletedTask);
-            var handler = new CreateBookingCommandHandler(context, fakeUser, fakeRedLockFactory, notificationServiceMock.Object);
+            var jobClientMock = new Mock<IBackgroundJobClient>();
+
+            var handler = new CreateBookingCommandHandler(context, fakeUser, fakeRedLockFactory, notificationServiceMock.Object,jobClientMock.Object);
             var bookingCommand = new CreateBookingCommand(
                 room.Id,
                 new TimeSpan(12, 0, 0), // No overlap with existing booking
                 new TimeSpan(14, 0, 0),
-                new DateOnly(2026, 10, 3));
+                new DateOnly(2026, 10, 3),Guid.NewGuid(),null);
             Func<Task> act = async () => await handler.Handle(bookingCommand, CancellationToken.None);
             await act.Should().NotThrowAsync();
 

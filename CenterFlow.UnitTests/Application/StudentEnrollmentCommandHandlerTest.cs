@@ -5,6 +5,7 @@ using CenterFlow.Domain.Entities;
 using CenterFlow.Domain.Enum;
 using CenterFlow.Infrastructure.Data;
 using FluentAssertions;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using RedLockNet;
@@ -81,7 +82,9 @@ namespace CenterFlow.UnitTests.Application
             await context.Rooms.AddAsync(room);
             await context.Books.AddAsync(book);
             await context.SaveChangesAsync();
-            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildDistributedLockFactory());
+            var jobClientMock = new Mock<IBackgroundJobClient>();
+
+            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildDistributedLockFactory(),jobClientMock.Object);
             var enrollmentCommand = new StudentEnrollCommand(book.Id);
             Func<Task> act = async () => await handler.Handle(enrollmentCommand, CancellationToken.None);
             await act.Should().ThrowAsync<ConflictException>().WithMessage("this book isn't available");
@@ -125,7 +128,9 @@ namespace CenterFlow.UnitTests.Application
             await context.Books.AddAsync(book);
             await context.StudentBookings.AddAsync(enrollment);
             await context.SaveChangesAsync();
-            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildDistributedLockFactory());
+            var jobClientMock = new Mock<IBackgroundJobClient>();
+
+            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildDistributedLockFactory(),jobClientMock.Object);
             var enrollmentCommand = new StudentEnrollCommand(book.Id);
             Func<Task> act = async () => await handler.Handle(enrollmentCommand, CancellationToken.None);
             await act.Should().ThrowAsync<ConflictException>().WithMessage("You are already enrolled in this session.");
@@ -170,8 +175,9 @@ namespace CenterFlow.UnitTests.Application
             await context.Books.AddAsync(book);
             await context.StudentBookings.AddAsync(existingEnrollment);
             await context.SaveChangesAsync();
+            var jobClientMock = new Mock<IBackgroundJobClient>();
 
-            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildDistributedLockFactory());
+            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildDistributedLockFactory(),jobClientMock.Object);
             var enrollmentCommand = new StudentEnrollCommand(book.Id);
             Func<Task> act = async () => await handler.Handle(enrollmentCommand, CancellationToken.None);
             await act.Should().ThrowAsync<ConflictException>().WithMessage("This session is fully booked.");
@@ -207,8 +213,9 @@ namespace CenterFlow.UnitTests.Application
             await context.Rooms.AddAsync(room);
             await context.Books.AddAsync(book);
             await context.SaveChangesAsync();
+            var jobClientMock = new Mock<IBackgroundJobClient>();
 
-            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildFailingDistributedLockFactory());
+            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildFailingDistributedLockFactory(),jobClientMock.Object);
             var enrollmentCommand = new StudentEnrollCommand(book.Id);
             Func<Task> act = async () => await handler.Handle(enrollmentCommand, CancellationToken.None);
             await act.Should().ThrowAsync<ConflictException>().WithMessage("Please try again in a moment.");
@@ -244,8 +251,9 @@ namespace CenterFlow.UnitTests.Application
             await context.Rooms.AddAsync(room);
             await context.Books.AddAsync(book);
             await context.SaveChangesAsync();
+            var jobClientMock = new Mock<IBackgroundJobClient>();
 
-            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildDistributedLockFactory());
+            var handler = new StudentEnrollCommandHandler(context, currentUserService(student.Id), BuildDistributedLockFactory(),jobClientMock.Object);
             var enrollmentCommand = new StudentEnrollCommand(book.Id);
             Func<Task> act = async () => await handler.Handle(enrollmentCommand, CancellationToken.None);
             await act.Should().NotThrowAsync();
