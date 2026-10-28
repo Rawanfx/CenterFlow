@@ -40,7 +40,6 @@ namespace CenterFlow.Controllers
         [Authorize(Roles = "Teacher")]
         public async Task<IActionResult> GetBooking([FromRoute] GetBookingQuery query)
         {
-
             var result = await mediator.Send(query);
             return Ok(result);
         }
