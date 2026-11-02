@@ -8,7 +8,7 @@ namespace CenterFlow.UnitTests.Application
         [Theory]
         [InlineData(10, 0, 9, 0, false)]   // From أكبر من To → invalid
         [InlineData(9, 0, 9, 0, false)]    // From == To → invalid
-        [InlineData(9, 0, 10, 0, true)]    // From أصغر من To → valid
+        [InlineData(9, 0, 10, 0, true)]    
         public void Validate_ChecksFromAndTo(int fromHour, int fromMin, int toHour, int toMin, bool expectedValid)
         {
             var validator = new CreateBookinValidator();
@@ -16,7 +16,7 @@ namespace CenterFlow.UnitTests.Application
                 Guid.NewGuid(),
                 new TimeSpan(fromHour, fromMin, 0),
                 new TimeSpan(toHour, toMin, 0),
-                DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)));
+                DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),Guid.NewGuid(),null);
 
             var result = validator.Validate(command);
 
@@ -34,7 +34,7 @@ namespace CenterFlow.UnitTests.Application
                 Guid.NewGuid(),
                 new TimeSpan(9, 0, 0),
                 new TimeSpan(10, 0, 0),
-                DateOnly.FromDateTime(DateTime.UtcNow.AddDays(daysFromToday)));
+                DateOnly.FromDateTime(DateTime.UtcNow.AddDays(daysFromToday)),Guid.NewGuid(),null);
 
             var result = validator.Validate(command);
 
