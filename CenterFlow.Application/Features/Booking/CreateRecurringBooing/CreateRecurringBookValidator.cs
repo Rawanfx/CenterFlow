@@ -2,9 +2,9 @@
 
 namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
 {
-    public class RecurringBookValidator:AbstractValidator<CreateRecurringBookingCommand>
+    public class CreateRecurringBookValidator:AbstractValidator<CreateRecurringBookingCommand>
     {
-        public RecurringBookValidator()
+        public CreateRecurringBookValidator()
         {
             RuleFor(x => x.Items)
                  .NotEmpty()

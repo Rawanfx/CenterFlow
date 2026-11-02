@@ -1,6 +1,6 @@
 ﻿namespace CenterFlow.Domain.Enum
 {
-    public enum RecuringType
+    public enum RecurringType
     {
         Weekly, Monthly,Daily, None
     }

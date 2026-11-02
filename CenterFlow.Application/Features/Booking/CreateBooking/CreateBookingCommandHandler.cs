@@ -39,7 +39,7 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
             if (teacher == null || roomId==null)
                 throw new NotFoundException("data Not found");
 
-            var key = $"booking-lock:room:{request.RoomId}:{request.date:yyyyMMdd}:{teacher.Id}";
+            var key = $"booking-lock:room:{request.RoomId}:{request.date:yyyyMMdd}";
             var expiry = TimeSpan.FromSeconds(10);
             await using var redLock = await redLockFactory.CreateLockAsync(
                 resource:key,
@@ -104,10 +104,11 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
     type: NotificationType.BookingCreated,
     referenceId: book.Id.ToString(),
     cancellationToken: cancellationToken);
-            var notifyTime = book.Date.ToDateTime(TimeOnly.FromTimeSpan(book.From)).AddMinutes(-30);
-            string body = $"Hello {teacher.FullName}, just a reminder that your session starts at {request.From} in 30 minutes. Have a great session!";
-
-            backgroundJobClient.Schedule<ISessionReminderJob>(x => x.SendAsync(book.Id),notifyTime);
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time");
+            var local = book.Date.ToDateTime(TimeOnly.FromTimeSpan(book.From)).AddMinutes(-30);
+            var runAt = new DateTimeOffset(local, tz.GetUtcOffset(local));
+            if (runAt>DateTimeOffset.UtcNow)
+            backgroundJobClient.Schedule<ISessionReminderJob>(x => x.SendAsync(book.Id),runAt);
             return new Response<Guid>()
             {
                 Data = book.Id,

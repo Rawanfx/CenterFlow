@@ -1,5 +1,6 @@
 ﻿using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Domain.Enum;
+using Ical.Net;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
 using Ical.Net.Evaluation;
@@ -20,15 +21,15 @@ namespace CenterFlow.Infrastructure.Services
             _ => throw new ArgumentOutOfRangeException(nameof(day))
         };
 
-        private static string FreqString(RecuringType type) => type switch
+        private static string FreqString(RecurringType type) => type switch
         {
-            RecuringType.Daily => "DAILY",
-            RecuringType.Weekly => "WEEKLY",
-            RecuringType.Monthly => "MONTHLY",
+            RecurringType.Daily => "DAILY",
+            RecurringType.Weekly => "WEEKLY",
+            RecurringType.Monthly => "MONTHLY",
             _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
 
-        public List<DateOnly> Dates(IEnumerable<DayOfWeek> days, DateOnly startDate, int times, RecuringType recuringType)
+        public List<DateOnly> Dates(IEnumerable<DayOfWeek> days, DateOnly startDate, int times, RecurringType recuringType)
         {
             var byDay = string.Join(",", days.Distinct().Select(GetShortDay));
             var freq = FreqString(recuringType);
@@ -48,7 +49,8 @@ namespace CenterFlow.Infrastructure.Services
             var to = new CalDateTime(startDate.AddYears(2).ToDateTime(TimeOnly.MinValue)); 
 
             return calendarEvent
-                .GetOccurrences(from,to)
+                .GetOccurrences(from)
+                .TakeWhileBefore(to)
                 .Select(o => DateOnly.FromDateTime(o.Period.StartTime.Value))
                 .Take(times)
                 .ToList();

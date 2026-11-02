@@ -12,7 +12,13 @@ public record BookingItem(
     TimeSpan From,
     TimeSpan To,
     RecurringType Type,
-    int Count);   // يتجاهل لو Type = None (يتحسب 1)
+    int Count);   
+public enum SkipReason
+{
+    RoomBooked,
+    TeacherBusy,
+    OutsideAvailability
+}
 
 public class BookResult
 {

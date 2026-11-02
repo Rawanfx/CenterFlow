@@ -4,6 +4,6 @@ namespace CenterFlow.Application.Common.Interfaces
 {
     public interface IRecurranceService
     {
-        List<DateOnly> Dates( IEnumerable<DayOfWeek> day, DateOnly startDate, int times, RecuringType recuringType);
+        List<DateOnly> Dates( IEnumerable<DayOfWeek> day, DateOnly startDate, int times, RecurringType recuringType);
     }
 }
