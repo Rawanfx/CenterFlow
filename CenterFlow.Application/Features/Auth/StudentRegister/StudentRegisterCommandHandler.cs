@@ -25,7 +25,7 @@ namespace CenterFlow.Application.Features.Auth.StudentRegister
                 Email = request.Email,
                 UserName = request.Email,
                 FullName = request.FullName,
-                GradeLevel = request.Level
+                GradeLevelId = request.GradeLevelId
             };
 
             var result = await userManager.CreateAsync(student, request.Password);

@@ -3,6 +3,7 @@ using CenterFlow.Application.Common.Exceptions;
 using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Application.Common.Models;
 using CenterFlow.Domain.Entities;
+using Hangfire;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using RedLockNet;
@@ -15,17 +16,20 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
     {
         private readonly IAppDbContext context;
         private INotificationService notificationService;
+        private readonly IBackgroundJobClient backgroundJobClient;
         private readonly ICurrentUserService userService;
         private readonly IDistributedLockFactory redLockFactory;
         public CreateBookingCommandHandler(IAppDbContext context
             ,ICurrentUserService userService
             , IDistributedLockFactory redLockFactory
-            ,INotificationService notificationService)
+            ,INotificationService notificationService
+            ,IBackgroundJobClient backgroundJobClient)
         {
             this.context = context;
             this.userService = userService;
             this.redLockFactory = redLockFactory;
             this.notificationService = notificationService;
+            this.backgroundJobClient = backgroundJobClient;
         }
         public async Task<Response<Guid>> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
         {
@@ -75,6 +79,11 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
                 throw new ConflictException("This room has been booked");
             if (isConflict)
                 throw new ConflictException("You already have a booking during this time.");
+
+            var teacherAssign = await context.TeacherSubjectAssignment
+                .FirstOrDefaultAsync(x => x.Id == request.TeacherSubjectAssign && x.TeacherId == teacher.Id);
+            if (teacherAssign == null)
+                throw new NotFoundException("Invalid Data");
             var book = new Book()
             {
                 Date = request.date,
@@ -83,7 +92,8 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
                 RoomId = request.RoomId,
                 Status = Domain.Enum.BookingStatus.Confirmed,
                 TeacherId = Guid.Parse(userService.UserId),
-                To = request.To
+                To = request.To,
+                TeacherSubjectAssignId=request.TeacherSubjectAssign
             };
             await context.Books.AddAsync(book);
             await context.SaveChangesAsync();
@@ -94,6 +104,10 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
     type: NotificationType.BookingCreated,
     referenceId: book.Id.ToString(),
     cancellationToken: cancellationToken);
+            var notifyTime = book.Date.ToDateTime(TimeOnly.FromTimeSpan(book.From)).AddMinutes(-30);
+            string body = $"Hello {teacher.FullName}, just a reminder that your session starts at {request.From} in 30 minutes. Have a great session!";
+
+            backgroundJobClient.Schedule<ISessionReminderJob>(x => x.SendAsync(book.Id),notifyTime);
             return new Response<Guid>()
             {
                 Data = book.Id,
