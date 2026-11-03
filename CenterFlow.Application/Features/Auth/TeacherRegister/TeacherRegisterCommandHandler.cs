@@ -12,12 +12,15 @@ namespace CenterFlow.Application.Features.Auth.TeacherRegister
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IAppDbContext context;
+        private readonly IEmailService emailService;
         public TeacherRegisterCommandHandler(UserManager<ApplicationUser> userManager
             ,IAppDbContext context
+            ,IEmailService emailService
             )
         {
             this.context = context;
             this.userManager = userManager;
+            this.emailService = emailService;
         }
         public async Task<Response<string>> Handle(TeacherRegisterCommand request, CancellationToken cancellationToken)
         {
@@ -46,6 +49,9 @@ namespace CenterFlow.Application.Features.Auth.TeacherRegister
                 await userManager.DeleteAsync(teacher);
                 throw new IdentityException(roleResult.Errors.Select(x => x.Description).ToList());
             }
+            var token = await userManager.GenerateEmailConfirmationTokenAsync(teacher);
+            var encodedToken = Uri.EscapeDataString(token);
+            await emailService.ConfirmEmail(teacher.Email, encodedToken);
             return new Response<string>() { Success = true, Message = "Registed Successfully" };
         }
     }

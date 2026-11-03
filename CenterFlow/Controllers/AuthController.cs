@@ -1,4 +1,5 @@
-﻿using CenterFlow.Application.Features.Auth.Login;
+﻿using CenterFlow.Application.Features.Auth.ConfirmEmail;
+using CenterFlow.Application.Features.Auth.Login;
 using CenterFlow.Application.Features.Auth.StudentRegister;
 using CenterFlow.Application.Features.Auth.TeacherRegister;
 using MediatR;
@@ -17,6 +18,12 @@ namespace CenterFlow.Controllers
         {
             var result = await mediator.Send(command);
             return Ok(result);
+        }
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] ConfirmEmailCommand command)
+        {
+            var response = await mediator.Send(command);
+            return Ok(response);
         }
         [HttpPost("student-register")]
         public async Task<IActionResult> StudentRegister(StudentRegisterCommand command)

@@ -43,5 +43,12 @@ namespace CenterFlow.Controllers
             var result = await mediator.Send(query);
             return Ok(result);
         }
+        [HttpPost("recurring")]
+        [Authorize(Roles ="Teacher")]
+        public async Task<IActionResult> CreateRecurringBooking(CreateRecurringBookingCommand command)
+        {
+            var result = await mediator.Send(command);
+            return Ok(result);
+        }
     }
 }

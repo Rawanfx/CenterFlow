@@ -1,7 +1,6 @@
 ﻿using CenterFlow.Application.Common.Models;
 using CenterFlow.Domain.Enum;
 using MediatR;
-
 public record CreateRecurringBookingCommand(List<BookingItem> Items)
     : IRequest<Response<BatchBookingResult>>;
 

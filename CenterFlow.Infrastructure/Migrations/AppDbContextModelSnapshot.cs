@@ -112,6 +112,12 @@ namespace CenterFlow.Infrastructure.Migrations
                     b.Property<TimeSpan>("From")
                         .HasColumnType("time");
 
+                    b.Property<Guid?>("RecurringBookingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ReminderSentAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("RoomId")
                         .HasColumnType("uniqueidentifier");
 
@@ -124,27 +130,30 @@ namespace CenterFlow.Infrastructure.Migrations
                     b.Property<string>("TeacherId1")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<Guid>("TeacherSubjectAssignId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<TimeSpan>("To")
                         .HasColumnType("time");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("RecurringBookingId");
+
                     b.HasIndex("RoomId");
 
                     b.HasIndex("TeacherId1");
 
+                    b.HasIndex("TeacherSubjectAssignId");
+
                     b.ToTable("Books");
                 });
 
-            modelBuilder.Entity("CenterFlow.Domain.Entities.Center", b =>
+            modelBuilder.Entity("CenterFlow.Domain.Entities.GradeLevel", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -152,7 +161,90 @@ namespace CenterFlow.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Centers");
+                    b.ToTable("GradeLevels");
+                });
+
+            modelBuilder.Entity("CenterFlow.Domain.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReferenceId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("CenterFlow.Domain.Entities.RecurringBooking", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("From")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("RoomId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("TeacherId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TeacherId1")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("TeacherSubjectAssignId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<TimeSpan>("To")
+                        .HasColumnType("time");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoomId");
+
+                    b.HasIndex("TeacherId1");
+
+                    b.ToTable("RecurringBookings");
                 });
 
             modelBuilder.Entity("CenterFlow.Domain.Entities.Room", b =>
@@ -164,16 +256,11 @@ namespace CenterFlow.Infrastructure.Migrations
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("CenterId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CenterId");
 
                     b.ToTable("Rooms");
                 });
@@ -190,8 +277,11 @@ namespace CenterFlow.Infrastructure.Migrations
                     b.Property<DateTime>("EnrolledAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsCancelled")
-                        .HasColumnType("bit");
+                    b.Property<DateTime?>("HoldExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uniqueidentifier");
@@ -235,6 +325,9 @@ namespace CenterFlow.Infrastructure.Migrations
                     b.Property<TimeSpan>("From")
                         .HasColumnType("time");
 
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("TeacherId")
                         .HasColumnType("uniqueidentifier");
 
@@ -249,6 +342,76 @@ namespace CenterFlow.Infrastructure.Migrations
                     b.HasIndex("TeacherId1");
 
                     b.ToTable("TeacherAvailabilities");
+                });
+
+            modelBuilder.Entity("CenterFlow.Domain.Entities.TeacherRatings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("StudentBookingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("TeacherGradeLevelId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentBookingId");
+
+                    b.HasIndex("TeacherGradeLevelId");
+
+                    b.HasIndex("StudentId", "TeacherGradeLevelId")
+                        .IsUnique();
+
+                    b.ToTable("Rates");
+                });
+
+            modelBuilder.Entity("CenterFlow.Domain.Entities.TeacherSubjectAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("GradeLevelId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TeacherId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradeLevelId");
+
+                    b.HasIndex("SubjectId");
+
+                    b.HasIndex("TeacherId");
+
+                    b.ToTable("TeacherSubjectAssignment");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -384,12 +547,21 @@ namespace CenterFlow.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("CenterFlow.Domain.Entities.Admins", b =>
+                {
+                    b.HasBaseType("CenterFlow.Domain.Entities.ApplicationUser");
+
+                    b.HasDiscriminator().HasValue("Admins");
+                });
+
             modelBuilder.Entity("CenterFlow.Domain.Entities.Student", b =>
                 {
                     b.HasBaseType("CenterFlow.Domain.Entities.ApplicationUser");
 
-                    b.Property<int>("GradeLevel")
-                        .HasColumnType("int");
+                    b.Property<Guid>("GradeLevelId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasIndex("GradeLevelId");
 
                     b.HasDiscriminator().HasValue("Student");
                 });
@@ -398,13 +570,17 @@ namespace CenterFlow.Infrastructure.Migrations
                 {
                     b.HasBaseType("CenterFlow.Domain.Entities.ApplicationUser");
 
-                    b.Property<Guid>("CenterId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Bio")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("ExperienceYear")
+                        .HasColumnType("float");
+
+                    b.Property<string>("ProfileImage")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("SubjectId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.HasIndex("CenterId");
 
                     b.HasIndex("SubjectId");
 
@@ -412,6 +588,37 @@ namespace CenterFlow.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("CenterFlow.Domain.Entities.Book", b =>
+                {
+                    b.HasOne("CenterFlow.Domain.Entities.RecurringBooking", "RecurringBooking")
+                        .WithMany("Books")
+                        .HasForeignKey("RecurringBookingId");
+
+                    b.HasOne("CenterFlow.Domain.Entities.Room", "Room")
+                        .WithMany()
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CenterFlow.Domain.Entities.Teacher", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("TeacherId1");
+
+                    b.HasOne("CenterFlow.Domain.Entities.TeacherSubjectAssignment", "TeacherSubjectAssignment")
+                        .WithMany()
+                        .HasForeignKey("TeacherSubjectAssignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RecurringBooking");
+
+                    b.Navigation("Room");
+
+                    b.Navigation("Teacher");
+
+                    b.Navigation("TeacherSubjectAssignment");
+                });
+
+            modelBuilder.Entity("CenterFlow.Domain.Entities.RecurringBooking", b =>
                 {
                     b.HasOne("CenterFlow.Domain.Entities.Room", "Room")
                         .WithMany()
@@ -428,21 +635,10 @@ namespace CenterFlow.Infrastructure.Migrations
                     b.Navigation("Teacher");
                 });
 
-            modelBuilder.Entity("CenterFlow.Domain.Entities.Room", b =>
-                {
-                    b.HasOne("CenterFlow.Domain.Entities.Center", "Center")
-                        .WithMany()
-                        .HasForeignKey("CenterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Center");
-                });
-
             modelBuilder.Entity("CenterFlow.Domain.Entities.StudentBooking", b =>
                 {
                     b.HasOne("CenterFlow.Domain.Entities.Book", "Book")
-                        .WithMany()
+                        .WithMany("StudentBookings")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -461,6 +657,60 @@ namespace CenterFlow.Infrastructure.Migrations
                     b.HasOne("CenterFlow.Domain.Entities.Teacher", "Teacher")
                         .WithMany("TeacherAvailabilities")
                         .HasForeignKey("TeacherId1");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("CenterFlow.Domain.Entities.TeacherRatings", b =>
+                {
+                    b.HasOne("CenterFlow.Domain.Entities.StudentBooking", "StudentBooking")
+                        .WithMany()
+                        .HasForeignKey("StudentBookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CenterFlow.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CenterFlow.Domain.Entities.TeacherSubjectAssignment", "TeacherGradeLevel")
+                        .WithMany()
+                        .HasForeignKey("TeacherGradeLevelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+
+                    b.Navigation("StudentBooking");
+
+                    b.Navigation("TeacherGradeLevel");
+                });
+
+            modelBuilder.Entity("CenterFlow.Domain.Entities.TeacherSubjectAssignment", b =>
+                {
+                    b.HasOne("CenterFlow.Domain.Entities.GradeLevel", "GradeLevel")
+                        .WithMany("TeacherGradeLevels")
+                        .HasForeignKey("GradeLevelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CenterFlow.Domain.Entities.Subject", "Subject")
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CenterFlow.Domain.Entities.Teacher", "Teacher")
+                        .WithMany("TeacherGradeLevels")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GradeLevel");
+
+                    b.Navigation("Subject");
 
                     b.Navigation("Teacher");
                 });
@@ -516,28 +766,48 @@ namespace CenterFlow.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CenterFlow.Domain.Entities.Teacher", b =>
+            modelBuilder.Entity("CenterFlow.Domain.Entities.Student", b =>
                 {
-                    b.HasOne("CenterFlow.Domain.Entities.Center", "Center")
+                    b.HasOne("CenterFlow.Domain.Entities.GradeLevel", "GradeLevel")
                         .WithMany()
-                        .HasForeignKey("CenterId")
+                        .HasForeignKey("GradeLevelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("GradeLevel");
+                });
+
+            modelBuilder.Entity("CenterFlow.Domain.Entities.Teacher", b =>
+                {
                     b.HasOne("CenterFlow.Domain.Entities.Subject", "Subject")
                         .WithMany()
                         .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Center");
-
                     b.Navigation("Subject");
+                });
+
+            modelBuilder.Entity("CenterFlow.Domain.Entities.Book", b =>
+                {
+                    b.Navigation("StudentBookings");
+                });
+
+            modelBuilder.Entity("CenterFlow.Domain.Entities.GradeLevel", b =>
+                {
+                    b.Navigation("TeacherGradeLevels");
+                });
+
+            modelBuilder.Entity("CenterFlow.Domain.Entities.RecurringBooking", b =>
+                {
+                    b.Navigation("Books");
                 });
 
             modelBuilder.Entity("CenterFlow.Domain.Entities.Teacher", b =>
                 {
                     b.Navigation("TeacherAvailabilities");
+
+                    b.Navigation("TeacherGradeLevels");
                 });
 #pragma warning restore 612, 618
         }

@@ -7,5 +7,6 @@ namespace CenterFlow.Application.Common.Interfaces
         Task SendBookingCancelledEmailAsync(
           SendEmailDto dto
             );
+        Task ConfirmEmail(string email, string token);
     }
 }

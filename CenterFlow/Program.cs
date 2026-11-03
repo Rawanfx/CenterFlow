@@ -43,6 +43,7 @@ builder.Services.AddScoped<IdentitySeeder>();
 builder.Services.AddTransient<GlobalExceptionHandling>();
 builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("JWT"));
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
 var jwt = builder.Configuration.GetSection("JWT").Get<JwtSetting>()!;
 
 builder.Services.AddAuthentication(options =>
