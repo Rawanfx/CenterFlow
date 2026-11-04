@@ -16,7 +16,7 @@ namespace CenterFlow.Application.Features.Rates.GetAllRatings
         }
         public async Task<PageResult<List<AdminRatingResult>>> Handle(GetAllRatingsQuery request, CancellationToken cancellationToken)
         {
-            var user =await context.Admins.FirstOrDefaultAsync(x => x.Id == userService.UserId);
+            var user =await context.CenterAdmins.FirstOrDefaultAsync(x => x.Id == userService.UserId);
             if (user == null)
                 throw new NotFoundException("User not found");
 

@@ -8,6 +8,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using RedLockNet;
 using RedLockNet.SERedis;
+using System.Diagnostics;
 
 namespace CenterFlow.Application.Features.Booking.CreateBooking
 {
@@ -41,12 +42,17 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
 
             var key = $"booking-lock:room:{request.RoomId}:{request.date:yyyyMMdd}";
             var expiry = TimeSpan.FromSeconds(10);
+            var stopwatch = Stopwatch.StartNew();
+
             await using var redLock = await redLockFactory.CreateLockAsync(
                 resource:key,
                 expiryTime:TimeSpan.FromSeconds(10),
                 waitTime:TimeSpan.FromSeconds (2),
                 retryTime:TimeSpan.FromMilliseconds(200)
                 );
+            stopwatch.Stop();
+            Console.WriteLine(
+                $"Lock acquisition took: {stopwatch.ElapsedMilliseconds} ms");
             if (!redLock.IsAcquired)
                 throw new ConflictException("Someone else is booking this room right now, please try again.");
 

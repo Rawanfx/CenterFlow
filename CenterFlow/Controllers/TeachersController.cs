@@ -10,6 +10,7 @@ namespace CenterFlow.Controllers
     public class TeachersController : ControllerBase
     {
         private readonly IMediator mediator;
+        public TeachersController(IMediator mediator) => this.mediator = mediator;
         [HttpPost("assign-subject")]
         [Authorize(Roles ="Teacher")]
         public async Task<IActionResult>TeacherAssign (AddTeacherSubjectAssignCommand command)

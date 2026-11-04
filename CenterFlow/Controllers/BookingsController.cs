@@ -23,7 +23,7 @@ namespace CenterFlow.Controllers
         [HttpPost]
         [Authorize(Roles = "Teacher")]
 
-        public async Task<IActionResult> Book(CreateBookingCommand command)
+        public async Task<IActionResult> Book([FromBody]CreateBookingCommand command)
         {
             var result = await mediator.Send(command);
             return Ok(result);

@@ -17,7 +17,7 @@ namespace CenterFlow.Application.Features.Subjects.AddSubjects
         }
         public async Task<Response<Guid>> Handle(AddSubjectCommand request, CancellationToken cancellationToken)
         {
-            var admin = await context.Admins.SingleAsync(x => x.Id == userService.UserId);
+            var admin = await context.CenterAdmins.SingleAsync(x => x.Id == userService.UserId);
 
             if (await context.Subjects.AnyAsync(x => x.Name.Trim() == request.Name.Trim() && x.IsActive))
                 throw new ConflictException("This subject is already excit");
