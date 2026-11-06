@@ -1,6 +1,7 @@
 using CenterFlow;
 using CenterFlow.Application;
 using CenterFlow.Application.Common.Interfaces;
+using CenterFlow.Application.Common.Service;
 using CenterFlow.Domain.Entities;
 using CenterFlow.Infrastructure.Data;
 using CenterFlow.Infrastructure.Hubs;
@@ -45,6 +46,7 @@ builder.Services.Configure<JwtSetting>(builder.Configuration.GetSection("JWT"));
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
 var jwt = builder.Configuration.GetSection("JWT").Get<JwtSetting>()!;
+builder.Services.AddScoped<OutboxProcessor>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -99,6 +101,11 @@ RecurringJob.AddOrUpdate<IMarkCompletedSessionsJob>(
     "mark-completed-sessions",
     x=>x.Execute(),
     Cron.Daily
+    );
+RecurringJob.AddOrUpdate<OutboxProcessor>(
+    "process-outbox-messages",
+    x => x.Process(),
+    Cron.Minutely
     );
 app.MapHub<NotificationHub>("/hub/notifications");
 

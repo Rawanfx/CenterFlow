@@ -2,6 +2,7 @@
 using CenterFlow.Application.Common.Exceptions;
 using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Application.Common.Models;
+using CenterFlow.Application.Common.Models.OutboxMessage;
 using CenterFlow.Domain.Entities;
 using Hangfire;
 using MediatR;
@@ -102,19 +103,52 @@ namespace CenterFlow.Application.Features.Booking.CreateBooking
                 TeacherSubjectAssignId=request.TeacherSubjectAssign
             };
             await context.Books.AddAsync(book);
-            await context.SaveChangesAsync();
-            await notificationService.SendAsync(
-    userId: userService.UserId.ToString(),
-    title: "New Booking",
-    body: $"You booked a session on {request.date}.",
-    type: NotificationType.BookingCreated,
-    referenceId: book.Id.ToString(),
-    cancellationToken: cancellationToken);
+            
+            var notificationEvent = new BookingNotificationEvent
+            {
+                BookingId = book.Id,
+                UserId = userService.UserId.ToString(),
+                Title = "New Booking",
+                Body = $"You booked a session on {request.date}.",
+                Type = NotificationType.BookingCreated,
+                ReferenceId = book.Id.ToString(),
+               
+            };
+
+            var messages = new List<Outbox>()
+            {
+                new Outbox
+                {
+                    Id = Guid.NewGuid(),
+                    Type = nameof(BookingNotificationEvent),
+                    Content = System.Text.Json.JsonSerializer.Serialize(notificationEvent),
+                    OccurredOnUtc = DateTime.UtcNow,
+                    RetryCount = 0
+                }
+            };
+
             var tz = TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time");
             var local = book.Date.ToDateTime(TimeOnly.FromTimeSpan(book.From)).AddMinutes(-30);
             var runAt = new DateTimeOffset(local, tz.GetUtcOffset(local));
-            if (runAt>DateTimeOffset.UtcNow)
-            backgroundJobClient.Schedule<ISessionReminderJob>(x => x.SendAsync(book.Id),runAt);
+            if (runAt > DateTimeOffset.UtcNow)
+            {
+               // backgroundJobClient.Schedule<ISessionReminderJob>(x => x.SendAsync(book.Id), runAt);
+                var reminderEvent = new BookingReminderEvent()
+                {
+                    BookId = book.Id,
+                    RunAt = runAt.UtcDateTime
+                };
+                messages.Add(new Outbox()
+                {
+                    Id = Guid.NewGuid(),
+                    Type = nameof(BookingReminderEvent),
+                    Content = System.Text.Json.JsonSerializer.Serialize(reminderEvent),
+                    OccurredOnUtc = DateTime.UtcNow,
+                    RetryCount = 0
+                });
+            }
+            await context.OutboxMessage.AddRangeAsync(messages);
+            await context.SaveChangesAsync();
             return new Response<Guid>()
             {
                 Data = book.Id,

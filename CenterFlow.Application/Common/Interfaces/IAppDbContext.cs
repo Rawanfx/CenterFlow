@@ -10,6 +10,7 @@ namespace CenterFlow.Application.Common.Interfaces
     {
          DbSet<Teacher> Teachers { get; }
          DbSet<Book> Books { get; }
+        DbSet<Outbox>OutboxMessage { get; }
          DbSet<Room> Rooms { get; }
          DbSet<Student> Students { get; }
          DbSet<StudentBooking> StudentBookings { get; }

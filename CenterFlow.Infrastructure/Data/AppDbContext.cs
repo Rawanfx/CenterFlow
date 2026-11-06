@@ -26,6 +26,8 @@ namespace CenterFlow.Infrastructure.Data
         public DbSet<TeacherRatings> Rates => Set<TeacherRatings>();
         public DbSet<RecurringBooking> RecurringBookings => Set<RecurringBooking>();
 
+        public DbSet<Outbox> OutboxMessage => Set<Outbox>();
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
