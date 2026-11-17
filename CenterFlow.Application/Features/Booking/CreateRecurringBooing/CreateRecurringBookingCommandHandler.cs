@@ -22,6 +22,18 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
        
         public async Task<Response<BatchBookingResult>> Handle(CreateRecurringBookingCommand request, CancellationToken cancellationToken)
         {
+            var user = await context.TeacherSubjectAssignment
+                .FirstOrDefaultAsync(x => x.TeacherId == userService.UserId && x.Id ==request.TeacherSubjectAssignId, cancellationToken);
+
+            if (user == null)
+                throw new NotFoundException("Teacher subject assignment not found");
+            var roomsRequest = request.Items.Select(x => x.RoomId).Distinct().ToList();
+            var rooms = await context.Rooms.Where(x => roomsRequest.Contains(x.Id)).ToListAsync(cancellationToken);
+            if (rooms.Count != roomsRequest.Count)
+            {
+                throw new NotFoundException("One or more rooms not found");
+            }
+
             var response = new BatchBookingResult();
             foreach (var item in request.Items)
             {
@@ -30,7 +42,7 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                     Id = Guid.NewGuid(),
                     TeacherId =Guid.Parse( userService.UserId),
                     RoomId = item.RoomId,
-                    TeacherSubjectAssignId = item.TeacherSubjectAssignId,
+                    TeacherSubjectAssignId = request.TeacherSubjectAssignId,
                     From = item.From,
                     To = item.To,
                     Type = item.Type,
@@ -41,7 +53,7 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                 context.RecurringBookings.Add(recurringBooking);
                 await context.SaveChangesAsync(cancellationToken);
                 int success = 0;
-                int count = item.Count > 1 ? item.Count : 1;
+                int count = item.Type == RecurringType.None ? 1 : Math.Max(item.Count,1);
                 for (int i = 0; i < count; i++)
                 {
                     var date = item.Type switch
@@ -51,7 +63,7 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                         RecurringType.Monthly => item.StartDate.AddMonths(i),
                         _ => item.StartDate
                     };
-                    var createBookingHandler = new CreateBookingCommand(item.RoomId, item.From, item.To, date, item.TeacherSubjectAssignId, recurringBooking.Id);
+                    var createBookingHandler = new CreateBookingCommand(item.RoomId, item.From, item.To, date, request.TeacherSubjectAssignId, recurringBooking.Id);
                     try
                     {
                         var result = await mediator.Send(createBookingHandler);
@@ -94,14 +106,14 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                             RecurringBookingId = recurringBooking.Id
                         });
                     }
-                    if (success==0)
-                    {
-                        context.RecurringBookings.Remove(recurringBooking);
-                        await context.SaveChangesAsync(cancellationToken);
-                        break;
-                    };
+                  
                 }
-
+                if (success == 0)
+                {
+                    context.RecurringBookings.Remove(recurringBooking);
+                    await context.SaveChangesAsync(cancellationToken);
+                }
+                
             }
             return new Response<BatchBookingResult>() { Data = response, Success = true };
         }

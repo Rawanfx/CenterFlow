@@ -1,12 +1,13 @@
 ﻿using CenterFlow.Application.Common.Models;
 using CenterFlow.Domain.Enum;
 using MediatR;
-public record CreateRecurringBookingCommand(List<BookingItem> Items)
+public record CreateRecurringBookingCommand(
+    Guid TeacherSubjectAssignId,
+List<BookingItem> Items)
     : IRequest<Response<BatchBookingResult>>;
 
 public record BookingItem(
     Guid RoomId,
-    Guid TeacherSubjectAssignId,
     DateOnly StartDate,
     TimeSpan From,
     TimeSpan To,

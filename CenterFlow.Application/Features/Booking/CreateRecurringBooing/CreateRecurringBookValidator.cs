@@ -6,6 +6,8 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
     {
         public CreateRecurringBookValidator()
         {
+            RuleFor(x=>x.TeacherSubjectAssignId)
+                .NotEmpty().WithMessage("Teacher subject assignment id is required.");
             RuleFor(x => x.Items)
                  .NotEmpty()
                  .Must(x => x.Count <= 10).WithMessage("You can't send more than 10 items in one request.");
@@ -19,8 +21,7 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                     .GreaterThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow));
                 RuleFor(x => x)
                     .Must(x => x.From > x.To).WithMessage("From must be before To.");
-                RuleFor(x => x.TeacherSubjectAssignId)
-                    .NotEqual(Guid.Empty);
+              
                 RuleFor(x => x.Type)
                     .IsInEnum();
             }
