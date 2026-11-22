@@ -17,7 +17,8 @@ public enum SkipReason
 {
     RoomBooked,
     TeacherBusy,
-    OutsideAvailability
+    OutsideAvailability,
+    LockNotAcquired
 }
 
 public class BookResult

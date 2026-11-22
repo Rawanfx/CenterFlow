@@ -3,6 +3,7 @@ using CenterFlow.Application.Common.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using CenterFlow.Application.Common.Exceptions;
+using CenterFlow.Domain.Enum;
 
 namespace CenterFlow.Application.Features.Availability.GetFreeRooms
 {
@@ -17,15 +18,20 @@ namespace CenterFlow.Application.Features.Availability.GetFreeRooms
         }
         public async Task<Response<List<FreeRoomDto>>> Handle(GetFreeRoomQuery request, CancellationToken cancellationToken)
         {
-            var teacher = context.Teachers.FirstOrDefaultAsync(x => x.Id == userService.UserId);
+            var teacher =await context.Teachers.FirstOrDefaultAsync(x => x.Id == userService.UserId);
             if (teacher == null)
                 throw new NotFoundException("Teacher not found");
             var bookedRooms =await context.Books
-                .Where(x => x.Date == request.date && x.From < request.To && x.To > request.From)
+                .Where(x => x.Date == request.date 
+                && x.From < request.To && x.To > request.From
+                && x.Status == BookingStatus.Confirmed)
                 .Select(x => x.RoomId)
                 .ToListAsync(cancellationToken);
-            var freeRooms = await context.Rooms
-                .Where(r => !bookedRooms.Contains(r.Id))
+            var freeRooms =  context.Rooms
+                .Where(r => !bookedRooms.Contains(r.Id));
+            if (request.MinCapacity.HasValue)
+                freeRooms=freeRooms.Where(x=> x.Capacity >= request.MinCapacity.Value);
+            var freeRoomsList = await freeRooms
                 .Select(r => new FreeRoomDto
                 {
                     RoomId = r.Id,
@@ -37,7 +43,7 @@ namespace CenterFlow.Application.Features.Availability.GetFreeRooms
                 .ToListAsync(cancellationToken);
             return new Response<List<FreeRoomDto>>()
             {
-                Data = freeRooms,
+                Data = freeRoomsList,
                 Success =true,
                 
             };

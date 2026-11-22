@@ -3,7 +3,7 @@ using MediatR;
 
 namespace CenterFlow.Application.Features.Availability.GetFreeRooms;
 
-    public record GetFreeRoomQuery(DateOnly date,TimeSpan From ,TimeSpan To) : IRequest<Response<List<FreeRoomDto>>>;
+    public record GetFreeRoomQuery(DateOnly date,TimeSpan From ,TimeSpan To,int ? MinCapacity) : IRequest<Response<List<FreeRoomDto>>>;
     public class FreeRoomDto
     {
         public Guid RoomId { get; set; }

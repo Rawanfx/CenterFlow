@@ -3,6 +3,9 @@ namespace CenterFlow.Application.Common.Exceptions
 {
     public class ConflictException:AppException
     {
-        public ConflictException (string message):base(message,409) { }
+        public SkipReason SkipReason { get;  }
+        public ConflictException (string message, SkipReason skipReason):base(message,409) {
+           this. SkipReason = skipReason;
+        }
     }
 }

@@ -13,6 +13,7 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
         private readonly IMediator mediator;
         private readonly IAppDbContext context;
         private readonly ICurrentUserService userService;
+   
         public CreateRecurringBookingCommandHandler(IMediator medaitor,IAppDbContext context,ICurrentUserService userService)
         {
             this.mediator = medaitor;
