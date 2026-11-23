@@ -18,7 +18,7 @@ public enum SkipReason
     RoomBooked,
     TeacherBusy,
     OutsideAvailability,
-    LockNotAcquired
+    LockNotAcquired, BookUnavailable, AlreadyEnrolled, NotFound, FullCapacity,
 }
 
 public class BookResult
@@ -32,8 +32,16 @@ public class BookResult
     public Guid RoomId { get; set; }
     public Guid? BookId { get; set; }
     public Guid RecurringBookingId { get; set; }
+    public List<FreeRoomDto> SuggestedRooms { get; set; } = new();
 }
-
+public class FreeRoomDto
+{
+    public Guid RoomId { get; set; }
+    public string RoomName { get; set; }
+    public int Capacity { get; set; }
+    public TimeSpan From { get; set; }
+    public TimeSpan To { get; set; }
+}
 public class BatchBookingResult
 {
     public List<BookResult> Results { get; set; } = new();

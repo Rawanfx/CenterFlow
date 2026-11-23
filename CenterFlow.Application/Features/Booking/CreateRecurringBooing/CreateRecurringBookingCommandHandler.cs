@@ -83,6 +83,7 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                     }
                     catch (ConflictException ex)
                     {
+                        var freeRooms = await mediator.Send(new GetFreeRoomQuery(date, item.From, item.To));
                         response.Results.Add(new BookResult
                         {
                             Success = false,
@@ -91,7 +92,8 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                             From = item.From,
                             To = item.To,
                             RoomId = item.RoomId,
-                            RecurringBookingId = recurringBooking.Id
+                            RecurringBookingId = recurringBooking.Id,
+                            FailureReason = ex.SkipReason
                         });
                     }
                    catch (NotFoundException ex)
