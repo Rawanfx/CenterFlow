@@ -1,6 +1,7 @@
 ﻿using CenterFlow.Application.Common.Exceptions;
 using CenterFlow.Application.Common.Interfaces;
 using CenterFlow.Application.Common.Models;
+using CenterFlow.Application.Features.Availability.GetFreeRooms;
 using CenterFlow.Application.Features.Booking.CreateBooking;
 using CenterFlow.Domain.Enum;
 using MediatR;
@@ -30,6 +31,9 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                 throw new NotFoundException("Teacher subject assignment not found");
             var roomsRequest = request.Items.Select(x => x.RoomId).Distinct().ToList();
             var rooms = await context.Rooms.Where(x => roomsRequest.Contains(x.Id)).ToListAsync(cancellationToken);
+            var capacity = await context.Rooms
+                .Where(x => roomsRequest.Contains(x.Id))
+                .ToDictionaryAsync(x => x.Id, x => x.Capacity);
             if (rooms.Count != roomsRequest.Count)
             {
                 throw new NotFoundException("One or more rooms not found");
@@ -38,6 +42,7 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
             var response = new BatchBookingResult();
             foreach (var item in request.Items)
             {
+                int count = item.Type == RecurringType.None ? 1 : Math.Max(item.Count,1);
                 var recurringBooking = new CenterFlow.Domain.Entities.RecurringBooking
                 {
                     Id = Guid.NewGuid(),
@@ -48,13 +53,12 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                     To = item.To,
                     Type = item.Type,
                     StartDate = item.StartDate,
-                    Count = item.Count,
+                    Count = count,
                     CreatedAt = DateTime.UtcNow
                 };
                 context.RecurringBookings.Add(recurringBooking);
                 await context.SaveChangesAsync(cancellationToken);
                 int success = 0;
-                int count = item.Type == RecurringType.None ? 1 : Math.Max(item.Count,1);
                 for (int i = 0; i < count; i++)
                 {
                     var date = item.Type switch
@@ -83,7 +87,13 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                     }
                     catch (ConflictException ex)
                     {
-                        var freeRooms = await mediator.Send(new GetFreeRoomQuery(date, item.From, item.To));
+                        List<FreeRoomDto> freeRooms = new List<FreeRoomDto>();
+                        if (ex.SkipReason == SkipReason.FullCapacity || ex.SkipReason == SkipReason.NotFound || ex.SkipReason == SkipReason.RoomBooked
+                            || ex.SkipReason == SkipReason.LockNotAcquired)
+                        {
+                            var getFreeRooms = await mediator.Send(new GetFreeRoomQuery(date, item.From, item.To, null));
+                            freeRooms = getFreeRooms.Data.Where(r => r.RoomId != item.RoomId).ToList();
+                        }
                         response.Results.Add(new BookResult
                         {
                             Success = false,
@@ -93,7 +103,8 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                             To = item.To,
                             RoomId = item.RoomId,
                             RecurringBookingId = recurringBooking.Id,
-                            FailureReason = ex.SkipReason
+                            FailureReason = ex.SkipReason,
+                            SuggestedRooms = freeRooms
                         });
                     }
                    catch (NotFoundException ex)
@@ -106,7 +117,7 @@ namespace CenterFlow.Application.Features.Booking.CreateRecurringBooing
                             From = item.From,
                             To = item.To,
                             RoomId = item.RoomId,
-                            RecurringBookingId = recurringBooking.Id
+                            RecurringBookingId = recurringBooking.Id,
                         });
                     }
                   
